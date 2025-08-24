@@ -13,14 +13,15 @@ import {
   ActivityIndicator,
   Platform,
   PermissionsAndroid,
+  Linking,
 } from 'react-native';
 import { BleManager, Device, Characteristic } from 'react-native-ble-plx';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// BLE Configuration (matching your Arduino sketch)
+// BLE Configuration
 const SERVICE_UUID = "12345678-1234-1234-1234-123456789abc";
-const SEND_CHAR_UUID = "11111111-2222-3333-4444-555555555555"; // For sending messages
-const MESH_CHAR_UUID = "87654321-4321-4321-4321-cba987654321"; // For receiving mesh status
+const SEND_CHAR_UUID = "11111111-2222-3333-4444-555555555555";
+const MESH_CHAR_UUID = "87654321-4321-4321-4321-cba987654321";
 
 const STORAGE_KEY = '@HikeSafe:messages';
 const DEVICE_KEY = '@HikeSafe:lastDevice';
@@ -36,7 +37,16 @@ export default function HikeSafeApp() {
   const [availableDevices, setAvailableDevices] = useState([]);
   const [bleState, setBleState] = useState('Unknown');
   const [permissionsGranted, setPermissionsGranted] = useState(false);
+  const [debugInfo, setDebugInfo] = useState([]);
   const flatListRef = useRef(null);
+  const scanTimeoutRef = useRef(null);
+  const bleManagerRef = useRef(null);
+  const stateSubscriptionRef = useRef(null);
+
+  const addDebugInfo = (message) => {
+    console.log('DEBUG:', message);
+    setDebugInfo(prev => [...prev.slice(-4), `${new Date().toLocaleTimeString()}: ${message}`]);
+  };
 
   useEffect(() => {
     initializeBLE();
@@ -47,39 +57,115 @@ export default function HikeSafeApp() {
     };
   }, []);
 
+  // Cleanup function to prevent memory leaks
+  const cleanup = () => {
+    try {
+      addDebugInfo('Starting cleanup...');
+      
+      // Clear scan timeout
+      if (scanTimeoutRef.current) {
+        clearTimeout(scanTimeoutRef.current);
+        scanTimeoutRef.current = null;
+      }
+
+      // Stop scanning
+      if (bleManagerRef.current) {
+        try {
+          bleManagerRef.current.stopDeviceScan();
+        } catch (e) {
+          console.warn('Error stopping scan:', e);
+        }
+      }
+
+      // Remove state subscription
+      if (stateSubscriptionRef.current) {
+        try {
+          stateSubscriptionRef.current.remove();
+          stateSubscriptionRef.current = null;
+        } catch (e) {
+          console.warn('Error removing subscription:', e);
+        }
+      }
+
+      // Disconnect device
+      if (device && isConnected) {
+        try {
+          device.cancelConnection();
+        } catch (e) {
+          console.warn('Error disconnecting device:', e);
+        }
+      }
+
+      // Destroy manager
+      if (bleManagerRef.current) {
+        try {
+          bleManagerRef.current.destroy();
+          bleManagerRef.current = null;
+        } catch (e) {
+          console.warn('Error destroying manager:', e);
+        }
+      }
+    } catch (error) {
+      console.error('Cleanup error:', error);
+    }
+  };
+
   const initializeBLE = async () => {
     try {
-      console.log('Initializing BLE...');
+      addDebugInfo('Starting BLE initialization...');
       
       // Request permissions first
       const hasPermissions = await requestPermissions();
       if (!hasPermissions) {
-        Alert.alert('Permissions Required', 'Bluetooth and location permissions are required for this app to work.');
+        addDebugInfo('Permissions denied');
+        Alert.alert(
+          'Permissions Required', 
+          'Bluetooth and location permissions are required. Please grant them in Settings.',
+          [
+            { text: 'Open Settings', onPress: () => Linking.openSettings() },
+            { text: 'Cancel' }
+          ]
+        );
         return;
       }
+      
+      addDebugInfo('Permissions granted, creating BLE manager');
       
       // Create BLE manager
       const bleManager = new BleManager();
       setManager(bleManager);
+      bleManagerRef.current = bleManager;
       
       // Monitor BLE state
       const subscription = bleManager.onStateChange((state) => {
-        console.log('BLE State:', state);
+        addDebugInfo(`BLE State changed: ${state}`);
         setBleState(state);
         
         if (state === 'PoweredOn') {
-          console.log('BLE is powered on and ready');
+          addDebugInfo('BLE is ready for scanning');
           setPermissionsGranted(true);
         } else if (state === 'PoweredOff') {
-          Alert.alert('Bluetooth Off', 'Please turn on Bluetooth to use this app.');
+          setPermissionsGranted(false);
+          // Don't show alert immediately, user might be turning it back on
+          setTimeout(() => {
+            if (bleState === 'PoweredOff') {
+              Alert.alert('Bluetooth Off', 'Please turn on Bluetooth to use this app.');
+            }
+          }, 2000);
+        } else if (state === 'Unauthorized') {
+          setPermissionsGranted(false);
+          Alert.alert(
+            'Bluetooth Permission Denied',
+            'Please grant Bluetooth permission in Settings.',
+            [{ text: 'Open Settings', onPress: () => Linking.openSettings() }]
+          );
         }
       }, true);
 
-      return () => {
-        subscription?.remove();
-      };
+      stateSubscriptionRef.current = subscription;
+
     } catch (error) {
-      console.error('BLE initialization error:', error);
+      addDebugInfo(`BLE init error: ${error.message}`);
       Alert.alert('BLE Error', 'Failed to initialize Bluetooth: ' + error.message);
     }
   };
@@ -87,82 +173,112 @@ export default function HikeSafeApp() {
   const requestPermissions = async () => {
     try {
       if (Platform.OS === 'android') {
-        const apiLevel = Platform.constants.Release;
+        const apiLevel = parseInt(Platform.Version, 10);
+        addDebugInfo(`Android API Level: ${apiLevel}`);
         
-        if (apiLevel >= 12) {
-          // Android 12+ permissions
-          const permissions = [
+        let permissions = [];
+        
+        if (apiLevel >= 31) { // Android 12+
+          permissions = [
             PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
             PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
             PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           ];
-          
-          const results = await PermissionsAndroid.requestMultiple(permissions);
-          
-          return Object.values(results).every(result => result === PermissionsAndroid.RESULTS.GRANTED);
-        } else {
-          // Android < 12 permissions
-          const permissions = [
+        } else if (apiLevel >= 23) { // Android 6+
+          permissions = [
             PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
             PermissionsAndroid.PERMISSIONS.BLUETOOTH,
             PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADMIN,
           ];
-          
-          const results = await PermissionsAndroid.requestMultiple(permissions);
-          
-          return Object.values(results).every(result => result === PermissionsAndroid.RESULTS.GRANTED);
+        } else {
+          // Older Android versions don't need runtime permissions
+          addDebugInfo('Old Android version, no runtime permissions needed');
+          return true;
         }
+        
+        addDebugInfo(`Requesting permissions: ${permissions.join(', ')}`);
+        
+        const results = await PermissionsAndroid.requestMultiple(permissions);
+        
+        // Log individual permission results
+        Object.entries(results).forEach(([permission, result]) => {
+          addDebugInfo(`${permission.split('.').pop()}: ${result}`);
+        });
+        
+        const allGranted = Object.values(results).every(result => 
+          result === PermissionsAndroid.RESULTS.GRANTED
+        );
+        
+        if (!allGranted) {
+          const deniedPermissions = Object.entries(results)
+            .filter(([_, result]) => result !== PermissionsAndroid.RESULTS.GRANTED)
+            .map(([permission, _]) => permission.split('.').pop());
+          
+          addDebugInfo(`Denied permissions: ${deniedPermissions.join(', ')}`);
+          
+          Alert.alert(
+            'Permissions Required',
+            `This app needs the following permissions to work:\n\n${deniedPermissions.join('\n')}\n\nPlease grant them in Settings.`,
+            [
+              { text: 'Open Settings', onPress: () => Linking.openSettings() },
+              { text: 'Try Again', onPress: () => requestPermissions() },
+              { text: 'Cancel' }
+            ]
+          );
+        } else {
+          addDebugInfo('All permissions granted');
+        }
+        
+        return allGranted;
       }
-      return true; // iOS permissions handled via Info.plist
+      
+      // iOS permissions handled via Info.plist
+      addDebugInfo('iOS - permissions handled via Info.plist');
+      return true;
+      
     } catch (error) {
-      console.error('Permission request error:', error);
+      addDebugInfo(`Permission request error: ${error.message}`);
       return false;
-    }
-  };
-
-  const cleanup = () => {
-    try {
-      if (device && isConnected) {
-        device.cancelConnection();
-      }
-      if (manager) {
-        manager.destroy();
-      }
-    } catch (error) {
-      console.error('Cleanup error:', error);
     }
   };
 
   const loadStoredData = async () => {
     try {
-      // Load message history
       const storedMessages = await AsyncStorage.getItem(STORAGE_KEY);
       if (storedMessages) {
-        setMessages(JSON.parse(storedMessages));
+        const parsedMessages = JSON.parse(storedMessages);
+        setMessages(Array.isArray(parsedMessages) ? parsedMessages : []);
       }
 
-      // Try to reconnect to last device (but don't auto-connect to avoid issues)
       const lastDeviceId = await AsyncStorage.getItem(DEVICE_KEY);
       if (lastDeviceId) {
-        console.log('Last device found:', lastDeviceId);
-        // You can add auto-reconnect logic here if needed
+        addDebugInfo(`Last device found: ${lastDeviceId.substring(0, 8)}...`);
       }
     } catch (error) {
       console.error('Error loading stored data:', error);
+      addDebugInfo(`Error loading stored data: ${error.message}`);
     }
   };
 
   const saveMessages = async (newMessages) => {
     try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newMessages));
+      if (Array.isArray(newMessages)) {
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newMessages));
+      }
     } catch (error) {
       console.error('Error saving messages:', error);
+      addDebugInfo(`Error saving messages: ${error.message}`);
     }
   };
 
   const addMessage = (message) => {
+    if (!message || typeof message !== 'object') {
+      addDebugInfo('Invalid message object');
+      return;
+    }
+
     const newMessage = {
-      id: Date.now().toString(),
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
       timestamp: new Date().toISOString(),
       ...message,
     };
@@ -173,51 +289,67 @@ export default function HikeSafeApp() {
       return updatedMessages;
     });
 
-    // Auto-scroll to bottom
+    // Use setTimeout to ensure the message is added before scrolling
     setTimeout(() => {
-      flatListRef.current?.scrollToEnd({ animated: true });
+      if (flatListRef.current) {
+        try {
+          flatListRef.current.scrollToEnd({ animated: true });
+        } catch (e) {
+          console.warn('Error scrolling to end:', e);
+        }
+      }
     }, 100);
   };
 
   const scanForDevices = async () => {
-    if (!manager) {
-      Alert.alert('BLE Not Ready', 'Bluetooth is not initialized yet. Please wait and try again.');
+    if (!bleManagerRef.current) {
+      addDebugInfo('BLE manager not ready');
+      Alert.alert('BLE Not Ready', 'Bluetooth manager is not initialized yet.');
       return;
     }
 
     if (bleState !== 'PoweredOn') {
-      Alert.alert('Bluetooth Off', 'Please turn on Bluetooth and try again.');
+      addDebugInfo(`BLE state not ready: ${bleState}`);
+      Alert.alert('Bluetooth Not Ready', `Bluetooth state: ${bleState}. Please ensure Bluetooth is turned on.`);
       return;
     }
 
-    if (isScanning) return;
+    if (isScanning) {
+      addDebugInfo('Already scanning');
+      return;
+    }
 
     setIsScanning(true);
     setAvailableDevices([]);
-    console.log('Starting BLE scan...');
+    addDebugInfo('Starting BLE scan...');
 
     try {
       // Clear any existing scan
-      manager.stopDeviceScan();
+      bleManagerRef.current.stopDeviceScan();
 
-      manager.startDeviceScan(null, null, (error, device) => {
+      let deviceCount = 0;
+
+      bleManagerRef.current.startDeviceScan(null, null, (error, scannedDevice) => {
         if (error) {
-          console.error('Scan error:', error);
+          addDebugInfo(`Scan error: ${error.message}`);
           setIsScanning(false);
-          Alert.alert('Scan Error', error.message);
+          Alert.alert('Scan Error', `Scan failed: ${error.message}`);
           return;
         }
 
-        if (device && device.name && device.name.startsWith('LoRaMesh_')) {
-          console.log('Found HikeSafe device:', device.name, device.id);
-          
+        if (scannedDevice && scannedDevice.id) {
+          deviceCount++;
+          addDebugInfo(`Found device ${deviceCount}: ${scannedDevice.name || 'Unknown'} (${scannedDevice.id.substring(0, 8)}...)`);
+
+          // Add all devices (with or without names) for debugging
           setAvailableDevices(prevDevices => {
-            const exists = prevDevices.find(d => d.id === device.id);
+            const exists = prevDevices.find(d => d.id === scannedDevice.id);
             if (!exists) {
               return [...prevDevices, {
-                id: device.id,
-                name: device.name,
-                rssi: device.rssi,
+                id: scannedDevice.id,
+                name: scannedDevice.name || 'Unknown Device',
+                rssi: scannedDevice.rssi || -100,
+                serviceUUIDs: scannedDevice.serviceUUIDs || [],
               }];
             }
             return prevDevices;
@@ -225,62 +357,79 @@ export default function HikeSafeApp() {
         }
       });
 
-      // Stop scanning after 10 seconds
-      setTimeout(() => {
-        if (manager) {
-          manager.stopDeviceScan();
+      // Stop scanning after 15 seconds
+      scanTimeoutRef.current = setTimeout(() => {
+        if (bleManagerRef.current) {
+          try {
+            bleManagerRef.current.stopDeviceScan();
+          } catch (e) {
+            console.warn('Error stopping scan:', e);
+          }
         }
         setIsScanning(false);
-        console.log('Scan completed');
-      }, 10000);
+        addDebugInfo(`Scan completed. Found ${deviceCount} devices.`);
+        
+        if (deviceCount === 0) {
+          Alert.alert(
+            'No Devices Found',
+            'No BLE devices were discovered. Make sure:\n\n• Your mesh device is powered on\n• Bluetooth is enabled\n• Location services are enabled\n• You\'re close to the device',
+            [{ text: 'OK' }]
+          );
+        }
+        scanTimeoutRef.current = null;
+      }, 15000);
 
     } catch (error) {
-      console.error('Failed to start scan:', error);
+      addDebugInfo(`Scan start error: ${error.message}`);
       setIsScanning(false);
       Alert.alert('Scan Error', 'Failed to start BLE scan: ' + error.message);
     }
   };
 
   const connectToDevice = async (deviceId) => {
-    if (!manager) {
+    if (!bleManagerRef.current) {
       Alert.alert('BLE Not Ready', 'Bluetooth manager is not initialized.');
       return;
     }
 
+    if (!deviceId || typeof deviceId !== 'string') {
+      Alert.alert('Invalid Device', 'Device ID is invalid.');
+      return;
+    }
+
     try {
-      console.log('Connecting to device:', deviceId);
+      addDebugInfo(`Connecting to: ${deviceId.substring(0, 8)}...`);
       
-      // Disconnect if already connected
+      // Disconnect existing device first
       if (device && isConnected) {
-        await device.cancelConnection();
+        try {
+          await device.cancelConnection();
+        } catch (e) {
+          console.warn('Error disconnecting existing device:', e);
+        }
       }
 
-      const connectedDevice = await manager.connectToDevice(deviceId);
-      console.log('Connected to:', connectedDevice.name);
+      const connectedDevice = await bleManagerRef.current.connectToDevice(deviceId);
+      addDebugInfo(`Connected to: ${connectedDevice.name || 'Unknown'}`);
 
-      // Discover services
       await connectedDevice.discoverAllServicesAndCharacteristics();
-      console.log('Services discovered');
+      addDebugInfo('Services discovered');
 
       setDevice(connectedDevice);
       setIsConnected(true);
 
-      // Save device for future reference
       await AsyncStorage.setItem(DEVICE_KEY, deviceId);
-
-      // Setup notifications for mesh status
       await setupNotifications(connectedDevice);
 
-      // Add connection message
       addMessage({
         type: 'system',
-        text: `Connected to ${connectedDevice.name || deviceId}`,
+        text: `Connected to ${connectedDevice.name || deviceId.substring(0, 8)}`,
         sender: 'system',
       });
 
-      // Monitor connection
-      connectedDevice.onDisconnected((error, disconnectedDevice) => {
-        console.log('Device disconnected:', error?.message || 'Unknown reason');
+      // Set up disconnection handler
+      const disconnectionSubscription = connectedDevice.onDisconnected((error, disconnectedDevice) => {
+        addDebugInfo(`Disconnected: ${error?.message || 'Unknown reason'}`);
         setIsConnected(false);
         setDevice(null);
         addMessage({
@@ -291,7 +440,7 @@ export default function HikeSafeApp() {
       });
 
     } catch (error) {
-      console.error('Connection failed:', error);
+      addDebugInfo(`Connection failed: ${error.message}`);
       Alert.alert('Connection Failed', `Could not connect to device: ${error.message}`);
       setIsConnected(false);
       setDevice(null);
@@ -300,52 +449,52 @@ export default function HikeSafeApp() {
 
   const setupNotifications = async (connectedDevice) => {
     try {
-      console.log('Setting up notifications...');
+      addDebugInfo('Setting up notifications...');
       
-      // Subscribe to mesh status updates
       await connectedDevice.monitorCharacteristicForService(
         SERVICE_UUID,
         MESH_CHAR_UUID,
         (error, characteristic) => {
           if (error) {
-            console.error('Notification error:', error);
+            addDebugInfo(`Notification error: ${error.message}`);
             return;
           }
 
           if (characteristic?.value) {
             try {
-              // Decode value - it might be base64 encoded or plain JSON
               let jsonString;
+              
+              // Handle base64 decoding more safely
               try {
-                // Try base64 decode first
                 jsonString = atob(characteristic.value);
               } catch (e) {
-                // If base64 fails, try direct conversion
-                const bytes = characteristic.value.match(/.{1,2}/g)?.map(byte => parseInt(byte, 16));
-                if (bytes) {
-                  jsonString = String.fromCharCode(...bytes);
-                } else {
+                // Fallback: try to parse as hex
+                try {
+                  const bytes = characteristic.value.match(/.{1,2}/g)?.map(byte => parseInt(byte, 16));
+                  if (bytes && bytes.every(b => !isNaN(b) && b >= 0 && b <= 255)) {
+                    jsonString = String.fromCharCode(...bytes);
+                  } else {
+                    jsonString = characteristic.value;
+                  }
+                } catch (e2) {
                   jsonString = characteristic.value;
                 }
               }
 
-              console.log('Raw notification data:', jsonString);
-              
               const meshData = JSON.parse(jsonString);
-              console.log('Mesh status update:', meshData);
+              addDebugInfo(`Mesh update: ${meshData.nodeCount || 0} nodes`);
               
               setMeshStatus(meshData);
 
-              // Check for new messages in recent messages array
               if (meshData.recentMessages && Array.isArray(meshData.recentMessages)) {
                 meshData.recentMessages.forEach(msg => {
-                  // Only show messages from other nodes (not our own)
-                  if (msg.sender && msg.sender !== meshData.nodeId) {
-                    // Check if we already have this message (basic deduplication)
+                  if (msg && msg.sender && msg.content && msg.sender !== meshData.nodeId) {
+                    // Check for duplicate messages more carefully
                     const messageExists = messages.some(existingMsg => 
                       existingMsg.text === msg.content && 
                       existingMsg.sender === msg.sender &&
-                      Math.abs(new Date(existingMsg.timestamp).getTime() - msg.timestamp) < 5000
+                      msg.timestamp && existingMsg.timestamp &&
+                      Math.abs(new Date(existingMsg.timestamp).getTime() - new Date(msg.timestamp).getTime()) < 5000
                     );
                     
                     if (!messageExists) {
@@ -361,16 +510,15 @@ export default function HikeSafeApp() {
               }
 
             } catch (parseError) {
-              console.error('Failed to parse mesh status:', parseError);
-              console.log('Raw characteristic value:', characteristic.value);
+              addDebugInfo(`Parse error: ${parseError.message}`);
             }
           }
         }
       );
 
-      console.log('Notifications setup complete');
+      addDebugInfo('Notifications setup complete');
     } catch (error) {
-      console.error('Failed to setup notifications:', error);
+      addDebugInfo(`Notification setup failed: ${error.message}`);
     }
   };
 
@@ -383,33 +531,36 @@ export default function HikeSafeApp() {
     setInputText('');
 
     try {
-      console.log('Sending message:', messageText);
+      addDebugInfo(`Sending: ${messageText.substring(0, 20)}...`);
 
-      // Convert message to bytes and then to base64
-      const messageBytes = new TextEncoder().encode(messageText);
-      const base64Message = btoa(String.fromCharCode(...messageBytes));
+      // Safely encode message
+      let base64Message;
+      try {
+        const messageBytes = new TextEncoder().encode(messageText);
+        base64Message = btoa(String.fromCharCode(...messageBytes));
+      } catch (e) {
+        // Fallback encoding
+        base64Message = btoa(messageText);
+      }
 
-      // Write to send characteristic
       await device.writeCharacteristicWithResponseForService(
         SERVICE_UUID,
         SEND_CHAR_UUID,
         base64Message
       );
 
-      // Add to local messages
       addMessage({
         type: 'sent',
         text: messageText,
         sender: 'me',
       });
 
-      console.log('Message sent successfully');
+      addDebugInfo('Message sent successfully');
 
     } catch (error) {
-      console.error('Failed to send message:', error);
+      addDebugInfo(`Send failed: ${error.message}`);
       Alert.alert('Send Error', `Failed to send message: ${error.message}`);
       
-      // Add failed message indicator
       addMessage({
         type: 'error',
         text: `Failed to send: ${messageText}`,
@@ -431,6 +582,7 @@ export default function HikeSafeApp() {
         });
       } catch (error) {
         console.error('Disconnect error:', error);
+        addDebugInfo(`Disconnect error: ${error.message}`);
       }
     }
   };
@@ -446,7 +598,11 @@ export default function HikeSafeApp() {
           style: 'destructive',
           onPress: async () => {
             setMessages([]);
-            await AsyncStorage.removeItem(STORAGE_KEY);
+            try {
+              await AsyncStorage.removeItem(STORAGE_KEY);
+            } catch (error) {
+              console.error('Error clearing messages:', error);
+            }
           },
         },
       ]
@@ -454,6 +610,10 @@ export default function HikeSafeApp() {
   };
 
   const renderMessage = ({ item }) => {
+    if (!item || !item.id) {
+      return null;
+    }
+
     const isSystem = item.type === 'system';
     const isSent = item.type === 'sent';
     const isError = item.type === 'error';
@@ -472,7 +632,7 @@ export default function HikeSafeApp() {
           isSystem && styles.systemMessageContent,
           isError && styles.errorMessageContent,
         ]}>
-          {(isReceived || isError) && (
+          {(isReceived || isError) && item.sender && (
             <Text style={styles.senderText}>
               {item.sender}
               {item.rssi && ` (${item.rssi} dBm)`}
@@ -484,31 +644,42 @@ export default function HikeSafeApp() {
             isSystem && styles.systemMessageText,
             isError && styles.errorMessageText,
           ]}>
-            {item.text}
+            {item.text || ''}
           </Text>
           <Text style={[
             styles.timestampText,
             isSent && styles.sentTimestampText,
           ]}>
-            {new Date(item.timestamp).toLocaleTimeString()}
+            {item.timestamp ? new Date(item.timestamp).toLocaleTimeString() : ''}
           </Text>
         </View>
       </View>
     );
   };
 
-  const renderDeviceItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.deviceItem}
-      onPress={() => connectToDevice(item.id)}
-    >
-      <View>
-        <Text style={styles.deviceName}>{item.name}</Text>
-        <Text style={styles.deviceId}>ID: {item.id.substring(0, 20)}...</Text>
-      </View>
-      <Text style={styles.deviceRssi}>{item.rssi} dBm</Text>
-    </TouchableOpacity>
-  );
+  const renderDeviceItem = ({ item }) => {
+    if (!item || !item.id) {
+      return null;
+    }
+
+    return (
+      <TouchableOpacity
+        style={styles.deviceItem}
+        onPress={() => connectToDevice(item.id)}
+      >
+        <View style={styles.deviceInfo}>
+          <Text style={styles.deviceName}>{item.name || 'Unknown Device'}</Text>
+          <Text style={styles.deviceId}>ID: {item.id.substring(0, 16)}...</Text>
+          {item.serviceUUIDs && item.serviceUUIDs.length > 0 && (
+            <Text style={styles.deviceServices}>
+              Services: {item.serviceUUIDs.length}
+            </Text>
+          )}
+        </View>
+        <Text style={styles.deviceRssi}>{item.rssi || -100} dBm</Text>
+      </TouchableOpacity>
+    );
+  };
 
   // Show initialization screen while BLE is setting up
   if (!manager || !permissionsGranted) {
@@ -519,8 +690,26 @@ export default function HikeSafeApp() {
           <ActivityIndicator size="large" color="#3498db" />
           <Text style={styles.initText}>Initializing Bluetooth...</Text>
           <Text style={styles.initSubtext}>BLE State: {bleState}</Text>
+          
+          {/* Debug info */}
+          <View style={styles.debugContainer}>
+            <Text style={styles.debugTitle}>Debug Info:</Text>
+            {debugInfo.map((info, index) => (
+              <Text key={index} style={styles.debugText}>{info}</Text>
+            ))}
+          </View>
+          
           {bleState === 'PoweredOff' && (
             <Text style={styles.warningText}>Please turn on Bluetooth</Text>
+          )}
+          
+          {bleState === 'Unauthorized' && (
+            <TouchableOpacity 
+              style={styles.settingsButton}
+              onPress={() => Linking.openSettings()}
+            >
+              <Text style={styles.settingsButtonText}>Open Settings</Text>
+            </TouchableOpacity>
           )}
         </View>
       </SafeAreaView>
@@ -541,6 +730,13 @@ export default function HikeSafeApp() {
           <Text style={styles.connectionTitle}>Connect to Mesh Network</Text>
           <Text style={styles.bleStatus}>Bluetooth: {bleState}</Text>
           
+          {/* Debug info */}
+          <View style={styles.debugContainer}>
+            {debugInfo.slice(-3).map((info, index) => (
+              <Text key={index} style={styles.debugText}>{info}</Text>
+            ))}
+          </View>
+          
           <TouchableOpacity
             style={[styles.scanButton, (isScanning || bleState !== 'PoweredOn') && styles.scanButtonDisabled]}
             onPress={scanForDevices}
@@ -557,11 +753,11 @@ export default function HikeSafeApp() {
 
           {availableDevices.length > 0 && (
             <View style={styles.devicesContainer}>
-              <Text style={styles.devicesTitle}>Available Devices:</Text>
+              <Text style={styles.devicesTitle}>Available Devices ({availableDevices.length}):</Text>
               <FlatList
                 data={availableDevices}
                 renderItem={renderDeviceItem}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item) => item?.id || Math.random().toString()}
                 style={styles.devicesList}
               />
             </View>
@@ -596,11 +792,11 @@ export default function HikeSafeApp() {
       {meshStatus && (
         <View style={styles.meshStatus}>
           <Text style={styles.meshStatusText}>
-            Node: {meshStatus.nodeId?.substring(0, 8)}... | 
-            Uptime: {Math.floor(meshStatus.uptime / 60)}m | 
+            Node: {meshStatus.nodeId?.substring(0, 8) || 'Unknown'}... | 
+            Uptime: {Math.floor((meshStatus.uptime || 0) / 60)}m | 
             Nodes: {meshStatus.nodeCount || 0} |
             Msgs: {meshStatus.totalReceived || 0}/{meshStatus.totalSent || 0}
-          </Text>
+          </Text> 
         </View>
       )}
 
@@ -608,10 +804,18 @@ export default function HikeSafeApp() {
         ref={flatListRef}
         data={messages}
         renderItem={renderMessage}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item?.id || Math.random().toString()}
         style={styles.messagesList}
         contentContainerStyle={styles.messagesContent}
-        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+        onContentSizeChange={() => {
+          if (flatListRef.current) {
+            try {
+              flatListRef.current.scrollToEnd({ animated: true });
+            } catch (e) {
+              console.warn('Error scrolling to end:', e);
+            }
+          }
+        }}
       />
 
       <View style={styles.inputContainer}>
@@ -668,6 +872,36 @@ const styles = StyleSheet.create({
     marginTop: 20,
     textAlign: 'center',
   },
+  debugContainer: {
+    backgroundColor: '#2c3e50',
+    padding: 10,
+    borderRadius: 8,
+    marginTop: 20,
+    maxWidth: '90%',
+  },
+  debugTitle: {
+    color: '#3498db',
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  debugText: {
+    color: '#95a5a6',
+    fontSize: 10,
+    fontFamily: 'monospace',
+  },
+  settingsButton: {
+    backgroundColor: '#3498db',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginTop: 20,
+  },
+  settingsButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
   header: {
     backgroundColor: '#2c3e50',
     padding: 16,
@@ -707,20 +941,19 @@ const styles = StyleSheet.create({
   connectionContainer: {
     flex: 1,
     padding: 20,
-    justifyContent: 'center',
   },
   connectionTitle: {
     color: '#ecf0f1',
     fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 10,
   },
   bleStatus: {
     color: '#3498db',
     fontSize: 14,
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 10,
   },
   scanButton: {
     backgroundColor: '#3498db',
@@ -738,7 +971,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   devicesContainer: {
-    marginTop: 20,
+    flex: 1,
   },
   devicesTitle: {
     color: '#ecf0f1',
@@ -747,7 +980,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   devicesList: {
-    maxHeight: 200,
+    flex: 1,
   },
   deviceItem: {
     backgroundColor: '#2c3e50',
@@ -758,6 +991,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  deviceInfo: {
+    flex: 1,
+  },
   deviceName: {
     color: '#ecf0f1',
     fontSize: 14,
@@ -765,6 +1001,11 @@ const styles = StyleSheet.create({
   },
   deviceId: {
     color: '#95a5a6',
+    fontSize: 10,
+    fontFamily: 'monospace',
+  },
+  deviceServices: {
+    color: '#3498db',
     fontSize: 10,
   },
   deviceRssi: {
