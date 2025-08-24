@@ -5,14 +5,14 @@ import {
   Linking,
 } from 'react-native';
 
-import InitializationScreen from './components/InitializationScreen';
-import ConnectionScreen from './components/ConnectionScreen';
-import ChatScreen from './components/ChatScreen';
-import { useBLE } from './hooks/useBLE';
-import { useMessages } from './hooks/useMessages';
-import { useDebug } from './hooks/useDebug';
-import { useDeviceConnection } from './hooks/useDeviceConnection';
-import styles from './styles/AppStyles';
+import InitializationScreen from './src/components/InitializationScreen';
+import ConnectionScreen from './src/components/ConnectionScreen';
+import ChatScreen from './src/components/ChatScreen';
+import { useBLE } from './src/hooks/useBLE';
+import { useMessages } from './src/hooks/useMessages';
+import { useDebug } from './src/hooks/useDebug';
+import { useDeviceConnection } from './src/hooks/useDeviceConnection';
+import styles from './src/styles/AppStyles';
 
 export default function HikeSafeApp() {
   const [isScanning, setIsScanning] = useState(false);
