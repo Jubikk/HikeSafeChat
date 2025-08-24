@@ -15,12 +15,11 @@ import MeshStatusBar from './MeshStatusBar';
 const ChatScreen = ({
   device,
   isConnected,
-  setDevice,
-  setIsConnected,
   messages,
   inputText,
   setInputText,
   meshStatus,
+  onDisconnect,
   addMessage,
   addDebugInfo,
 }) => {
@@ -84,23 +83,7 @@ const ChatScreen = ({
     }
   };
 
-  const disconnect = async () => {
-    if (device && isConnected) {
-      try {
-        await device.cancelConnection();
-        setDevice(null);
-        setIsConnected(false);
-        addMessage({
-          type: MESSAGE_TYPES.SYSTEM,
-          text: 'Disconnected from mesh network',
-          sender: 'system',
-        });
-      } catch (error) {
-        console.error('Disconnect error:', error);
-        addDebugInfo(`Disconnect error: ${error.message}`);
-      }
-    }
-  };
+
 
   return (
     <View style={styles.container}>
@@ -111,7 +94,7 @@ const ChatScreen = ({
             {meshStatus ? `${meshStatus.nodeCount || 0} nodes` : 'Connected'}
           </Text>
         </View>
-        <TouchableOpacity onPress={disconnect} style={styles.disconnectButton}>
+        <TouchableOpacity onPress={onDisconnect} style={styles.disconnectButton}>
           <Text style={styles.disconnectButtonText}>Disconnect</Text>
         </TouchableOpacity>
       </View>

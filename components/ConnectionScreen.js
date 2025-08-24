@@ -8,8 +8,7 @@ import {
   Alert,
   StyleSheet,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { BLE_CONFIG, STORAGE_KEYS } from '../config/constants';
+import { BLE_CONFIG } from '../config/constants';
 import DeviceItem from './DeviceItem';
 
 const ConnectionScreen = ({
@@ -20,13 +19,10 @@ const ConnectionScreen = ({
   setAvailableDevices,
   debugInfo,
   messages,
-  setMessages,
-  setDevice,
-  setIsConnected,
-  setMeshStatus,
-  addDebugInfo,
-  addMessage,
+  connectToDevice,
+  clearMessages,
   bleManagerRef,
+  addDebugInfo,
 }) => {
   const scanTimeoutRef = useRef(null);
 
@@ -184,78 +180,7 @@ const ConnectionScreen = ({
     }
   };
 
-  const connectToDevice = async (deviceId) => {
-    if (!bleManagerRef.current) {
-      Alert.alert('BLE Not Ready', 'Bluetooth manager is not initialized.');
-      return;
-    }
 
-    if (!deviceId || typeof deviceId !== 'string') {
-      Alert.alert('Invalid Device', 'Device ID is invalid.');
-      return;
-    }
-
-    try {
-      addDebugInfo(`Connecting to: ${deviceId.substring(0, 8)}...`);
-
-      const connectedDevice = await bleManagerRef.current.connectToDevice(deviceId);
-      addDebugInfo(`Connected to: ${connectedDevice.name || 'Unknown'}`);
-
-      await connectedDevice.discoverAllServicesAndCharacteristics();
-      addDebugInfo('Services discovered');
-
-      setDevice(connectedDevice);
-      setIsConnected(true);
-
-      await AsyncStorage.setItem(STORAGE_KEYS.DEVICE, deviceId);
-      await setupNotifications(connectedDevice);
-
-      addMessage({
-        type: 'system',
-        text: `Connected to ${connectedDevice.name || deviceId.substring(0, 8)}`,
-        sender: 'system',
-      });
-
-      const disconnectionSubscription = connectedDevice.onDisconnected((error, disconnectedDevice) => {
-        addDebugInfo(`Disconnected: ${error?.message || 'Unknown reason'}`);
-        setIsConnected(false);
-        setDevice(null);
-        addMessage({
-          type: 'system',
-          text: 'Disconnected from mesh network',
-          sender: 'system',
-        });
-      });
-
-    } catch (error) {
-      addDebugInfo(`Connection failed: ${error.message}`);
-      Alert.alert('Connection Failed', `Could not connect to device: ${error.message}`);
-      setIsConnected(false);
-      setDevice(null);
-    }
-  };
-
-  const clearMessages = async () => {
-    Alert.alert(
-      'Clear Messages',
-      'Are you sure you want to clear all messages?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Clear',
-          style: 'destructive',
-          onPress: async () => {
-            setMessages([]);
-            try {
-              await AsyncStorage.removeItem(STORAGE_KEYS.MESSAGES);
-            } catch (error) {
-              console.error('Error clearing messages:', error);
-            }
-          },
-        },
-      ]
-    );
-  };
 
   return (
     <View style={styles.connectionContainer}>
