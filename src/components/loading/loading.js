@@ -7,7 +7,7 @@ const Loading = ({ visible = true }) => {
   return (
     <View style={styles.container}>
       <Image
-        source={require('../../../assets/Loading_feature.gif')}
+        source={require('../../../assets/Loading_feature.svg')}
         style={styles.loadingGif}
         resizeMode="contain"
       />
