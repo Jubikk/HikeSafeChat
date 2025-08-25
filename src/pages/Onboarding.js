@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 
 /**
@@ -29,6 +30,13 @@ const OnboardingScreen = ({ onNext }) => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Background illustration anchored to bottom */}
+      <Image
+        source={require('../../assets/OnBoarding-background.png')}
+        style={styles.bgImage}
+        resizeMode="cover"
+        pointerEvents="none"
+      />
       <KeyboardAvoidingView 
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -66,19 +74,19 @@ const OnboardingScreen = ({ onNext }) => {
             <View style={styles.progressDot} />
           </View>
         </View>
-
-        <View style={styles.footer}>
-          <TouchableOpacity 
-            style={[styles.nextButton, isNextDisabled && styles.nextButtonDisabled]}
-            onPress={handleNext}
-            disabled={isNextDisabled}
-          >
-            <Text style={[styles.nextButtonText, isNextDisabled && styles.nextButtonTextDisabled]}>
-              Next
-            </Text>
-          </TouchableOpacity>
-        </View>
       </KeyboardAvoidingView>
+
+      <View style={styles.footer}>
+        <TouchableOpacity 
+          style={[styles.nextButton, isNextDisabled && styles.nextButtonDisabled]}
+          onPress={handleNext}
+          disabled={isNextDisabled}
+        >
+          <Text style={[styles.nextButtonText, isNextDisabled && styles.nextButtonTextDisabled]}>
+            Next
+          </Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 };
@@ -86,17 +94,28 @@ const OnboardingScreen = ({ onNext }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#FFFFFF',
+    position: 'relative',
   },
   keyboardAvoidingView: {
     flex: 1,
   },
+  bgImage: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '63%',
+    zIndex: 0,
+  },
   content: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
     paddingHorizontal: 32,
     paddingTop: 40,
-    marginTop: 10,
+    marginTop: 0,
+    zIndex: 1,
   },
   title: {
     fontSize: 40,
@@ -144,19 +163,31 @@ const styles = StyleSheet.create({
   activeDot: {
     backgroundColor: '#00C851',
   },
-  nextButton: {
-    backgroundColor: '#00C851',
-    borderRadius: 8,
-    paddingVertical: 16,
+  footer: {
+    backgroundColor: 'transparent',
+    paddingHorizontal: 32,
+    paddingBottom: 130, // Adjust the padding higher to make next button higher
     alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 0,
+    zIndex: 1,
+  },
+  nextButton: {
+    backgroundColor: '#69B437',
+    borderRadius: 4,
+    height: 43,
+    width: 239,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   nextButtonDisabled: {
     backgroundColor: '#E0E0E0',
   },
   nextButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '600',
+    fontFamily: 'Montserrat-SemiBold',
   },
   nextButtonTextDisabled: {
     color: '#999',
