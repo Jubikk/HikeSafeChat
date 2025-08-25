@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import {
   StatusBar,
   Linking,
+  SafeAreaView,
 } from 'react-native';
 
-import InitializationScreen from './src/components/InitializationScreen';
-import ConnectionScreen from './src/components/ConnectionScreen';
-import ChatScreen from './src/components/ChatScreen';
+import InitializationScreen from './src/components/Messaging/InitializationScreen';
+import ConnectionScreen from './src/components/Messaging/ConnectionScreen';
+import ChatScreen from './src/components/Messaging/ChatScreen';
 import { useBLE } from './src/hooks/useBLE';
 import { useMessages } from './src/hooks/useMessages';
 import { useDebug } from './src/hooks/useDebug';
@@ -15,6 +16,7 @@ import styles from './src/styles/AppStyles';
 import Onboarding from './src/pages/Onboarding';
 
 export default function HikeSafeApp() {
+  const [showOnboarding, setShowOnboarding] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
   const [inputText, setInputText] = useState('');
   const [availableDevices, setAvailableDevices] = useState([]);
@@ -33,6 +35,13 @@ export default function HikeSafeApp() {
     connectToDevice, 
     disconnect 
   } = useDeviceConnection(bleManagerRef, addDebugInfo, addMessage);
+
+  // Show onboarding screen first
+  if (showOnboarding) {
+    return (
+      <Onboarding onNext={() => setShowOnboarding(false)} />
+    );
+  }
 
   // Show initialization screen while BLE is setting up
   if (!manager || !permissionsGranted) {

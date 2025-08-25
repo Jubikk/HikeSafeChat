@@ -5,7 +5,7 @@ import {
   StyleSheet,
   Dimensions,
 } from 'react-native';
-import { MESSAGE_TYPES } from '../config/constants';
+import { MESSAGE_TYPES } from '../../config/constants';
 
 const { width } = Dimensions.get('window');
 
