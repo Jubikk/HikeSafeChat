@@ -13,7 +13,7 @@ import { useMessages } from './src/hooks/useMessages';
 import { useDebug } from './src/hooks/useDebug';
 import { useDeviceConnection } from './src/hooks/useDeviceConnection';
 import styles from './src/styles/AppStyles';
-import Onboarding from './src/pages/Onboarding';
+import OnboardingFlow from './src/pages/Onboarding';
 
 export default function HikeSafeApp() {
   const [showOnboarding, setShowOnboarding] = useState(true);
@@ -39,7 +39,7 @@ export default function HikeSafeApp() {
   // Show onboarding screen first
   if (showOnboarding) {
     return (
-      <Onboarding onNext={() => setShowOnboarding(false)} />
+      <OnboardingFlow onComplete={() => setShowOnboarding(false)} />
     );
   }
 

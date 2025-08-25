@@ -10,11 +10,10 @@ import {
   Platform,
   Image,
 } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 
 /**
- * OnboardingScreen component
- * @param {Object} props
- * @param {Function} props.onNext - Callback to proceed to the next screen
+ * OnboardingScreen component - First screen asking for name
  */
 const OnboardingScreen = ({ onNext }) => {
   const [firstName, setFirstName] = useState('');
@@ -30,7 +29,6 @@ const OnboardingScreen = ({ onNext }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Background illustration anchored to bottom */}
       <Image
         source={require('../../assets/OnBoarding-background.png')}
         style={styles.bgImage}
@@ -91,6 +89,160 @@ const OnboardingScreen = ({ onNext }) => {
   );
 };
 
+/**
+ * SafetyFirstScreen component - Second screen for safety information
+ */
+const SafetyFirstScreen = ({ onNext }) => {
+  const [contactName, setContactName] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [bloodType, setBloodType] = useState('');
+  const [medicalCondition, setMedicalCondition] = useState('');
+
+  const bloodTypes = [
+    { label: 'Type O (Dropdown)', value: '' },
+    { label: 'A+', value: 'A+' },
+    { label: 'A-', value: 'A-' },
+    { label: 'B+', value: 'B+' },
+    { label: 'B-', value: 'B-' },
+    { label: 'AB+', value: 'AB+' },
+    { label: 'AB-', value: 'AB-' },
+    { label: 'O+', value: 'O+' },
+    { label: 'O-', value: 'O-' },
+  ];
+
+  const handleNext = () => {
+    if (contactName.trim() && contactPhone.trim() && bloodType && medicalCondition.trim()) {
+      if (typeof onNext === 'function') onNext();
+    }
+  };
+
+  const isNextDisabled = !contactName.trim() || !contactPhone.trim() || !bloodType || !medicalCondition.trim();
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <Image
+        source={require('../../assets/OnBoarding-background.png')}
+        style={styles.bgImage}
+        resizeMode="cover"
+        pointerEvents="none"
+      />
+      <KeyboardAvoidingView 
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <View style={styles.content}>
+          <Text style={styles.title}>Safety first!</Text>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Contact Name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Name"
+              placeholderTextColor="#C7C7C7"
+              value={contactName}
+              onChangeText={setContactName}
+              returnKeyType="next"
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Contact Phone</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Phone"
+              placeholderTextColor="#C7C7C7"
+              value={contactPhone}
+              onChangeText={setContactPhone}
+              keyboardType="phone-pad"
+              returnKeyType="next"
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Blood Type</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={bloodType}
+                onValueChange={setBloodType}
+                style={styles.picker}
+                mode="dropdown"
+              >
+                {bloodTypes.map((type, index) => (
+                  <Picker.Item 
+                    key={index} 
+                    label={type.label} 
+                    value={type.value}
+                    color={type.value === '' ? '#C7C7C7' : '#333'}
+                  />
+                ))}
+              </Picker>
+            </View>
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Medical Condition</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Medical Condition"
+              placeholderTextColor="#C7C7C7"
+              value={medicalCondition}
+              onChangeText={setMedicalCondition}
+              returnKeyType="done"
+              multiline={true}
+            />
+          </View>
+
+          <View style={styles.progressContainer}>
+            <View style={styles.progressDot} />
+            <View style={[styles.progressDot, styles.activeDot]} />
+            <View style={styles.progressDot} />
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+
+      <View style={styles.footer}>
+        <TouchableOpacity 
+          style={[styles.nextButton, isNextDisabled && styles.nextButtonDisabled]}
+          onPress={handleNext}
+          disabled={isNextDisabled}
+        >
+          <Text style={[styles.nextButtonText, isNextDisabled && styles.nextButtonTextDisabled]}>
+            Next
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+};
+
+/**
+ * Main OnboardingFlow component that handles navigation between screens
+ */
+const OnboardingFlow = ({ onComplete }) => {
+  const [currentScreen, setCurrentScreen] = useState(0);
+
+  const handleNextScreen = () => {
+    setCurrentScreen(currentScreen + 1);
+  };
+
+  const handleCompleteOnboarding = () => {
+    // Handle onboarding completion here
+    console.log('Onboarding completed!');
+    if (typeof onComplete === 'function') {
+      onComplete();
+    }
+  };
+
+  switch (currentScreen) {
+    case 0:
+      return <OnboardingScreen onNext={handleNextScreen} />;
+    case 1:
+      return <SafetyFirstScreen onNext={handleCompleteOnboarding} />;
+    default:
+      return <OnboardingScreen onNext={handleNextScreen} />;
+  }
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -146,12 +298,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#FFFFFF',
     color: '#333',
+    minHeight: 44,
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
+    height: 44,
+  },
+  picker: {
+    height: 44,
+    color: '#333',
+    marginTop: Platform.OS === 'ios' ? 0 : -8,
   },
   progressContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 40,
+    marginTop: 25,
     gap: 8,
   },
   progressDot: {
@@ -166,7 +332,7 @@ const styles = StyleSheet.create({
   footer: {
     backgroundColor: 'transparent',
     paddingHorizontal: 32,
-    paddingBottom: 130, // Adjust the padding higher to make next button higher
+    paddingBottom: 100,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 0,
@@ -194,4 +360,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default OnboardingScreen;
+export default OnboardingFlow;
