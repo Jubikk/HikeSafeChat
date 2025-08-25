@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  SafeAreaView,
   StatusBar,
   Linking,
 } from 'react-native';
@@ -13,6 +12,7 @@ import { useMessages } from './src/hooks/useMessages';
 import { useDebug } from './src/hooks/useDebug';
 import { useDeviceConnection } from './src/hooks/useDeviceConnection';
 import styles from './src/styles/AppStyles';
+import Onboarding from './src/pages/Onboarding';
 
 export default function HikeSafeApp() {
   const [isScanning, setIsScanning] = useState(false);
