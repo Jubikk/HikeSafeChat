@@ -216,6 +216,83 @@ const SafetyFirstScreen = ({ onNext }) => {
 };
 
 /**
+ * TrailReadyScreen component - Third screen for hiking experience
+ */
+const TrailReadyScreen = ({ onComplete }) => {
+  const [experienceLevel, setExperienceLevel] = useState('');
+
+  const experienceLevels = [
+    { label: 'Beginner (Dropdown)', value: '' },
+    { label: 'Beginner', value: 'beginner' },
+    { label: 'Intermediate', value: 'intermediate' },
+    { label: 'Advanced', value: 'advanced' },
+    { label: 'Expert', value: 'expert' },
+  ];
+
+  const handleGetStarted = () => {
+    if (experienceLevel) {
+      if (typeof onComplete === 'function') onComplete();
+    }
+  };
+
+  const isGetStartedDisabled = !experienceLevel;
+
+  return (
+    <SafeAreaView style={styles.trailContainer}>
+      <Image
+        source={require('../../assets/OnBoarding-background.png')}
+        style={styles.trailBgImage}
+        resizeMode="cover"
+        pointerEvents="none"
+      />
+      
+      <View style={styles.trailContent}>
+        <Text style={styles.trailTitle}>Get ready with{'\n'}the trail!</Text>
+
+        <View style={styles.trailInputContainer}>
+          <Text style={styles.trailLabel}>Hiking Experience level</Text>
+          <View style={styles.trailPickerContainer}>
+            <Picker
+              selectedValue={experienceLevel}
+              onValueChange={setExperienceLevel}
+              style={styles.trailPicker}
+              mode="dropdown"
+            >
+              {experienceLevels.map((level, index) => (
+                <Picker.Item 
+                  key={index} 
+                  label={level.label} 
+                  value={level.value}
+                  color={level.value === '' ? '#C7C7C7' : '#333'}
+                />
+              ))}
+            </Picker>
+          </View>
+        </View>
+
+        <View style={styles.trailProgressContainer}>
+          <View style={styles.progressDot} />
+          <View style={styles.progressDot} />
+          <View style={[styles.progressDot, styles.activeDot]} />
+        </View>
+      </View>
+
+      <View style={styles.trailFooter}>
+        <TouchableOpacity 
+          style={[styles.getStartedButton, isGetStartedDisabled && styles.getStartedButtonDisabled]}
+          onPress={handleGetStarted}
+          disabled={isGetStartedDisabled}
+        >
+          <Text style={[styles.getStartedButtonText, isGetStartedDisabled && styles.getStartedButtonTextDisabled]}>
+            Get Started
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+};
+
+/**
  * Main OnboardingFlow component that handles navigation between screens
  */
 const OnboardingFlow = ({ onComplete }) => {
@@ -237,7 +314,9 @@ const OnboardingFlow = ({ onComplete }) => {
     case 0:
       return <OnboardingScreen onNext={handleNextScreen} />;
     case 1:
-      return <SafetyFirstScreen onNext={handleCompleteOnboarding} />;
+      return <SafetyFirstScreen onNext={handleNextScreen} />;
+    case 2:
+      return <TrailReadyScreen onComplete={handleCompleteOnboarding} />;
     default:
       return <OnboardingScreen onNext={handleNextScreen} />;
   }
@@ -356,6 +435,97 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat-SemiBold',
   },
   nextButtonTextDisabled: {
+    color: '#999',
+  },
+  // Trail Ready Screen Styles
+  trailContainer: {
+    flex: 1,
+    backgroundColor: '#F8F9FA',
+    position: 'relative',
+  },
+  trailBgImage: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '70%',
+    zIndex: 0,
+    opacity: 0.3,
+  },
+  trailContent: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    paddingHorizontal: 32,
+    paddingTop: 80,
+    zIndex: 1,
+    justifyContent: 'flex-start',
+  },
+  trailTitle: {
+    fontSize: 40,
+    fontWeight: 'bold',
+    color: '#48C029',
+    marginBottom: 80,
+    lineHeight: 48,
+    textAlign: 'center',
+    fontFamily: 'Montserrat-Bold',
+  },
+  trailInputContainer: {
+    marginBottom: 40,
+  },
+  trailLabel: {
+    fontSize: 16,
+    color: '#255D00',
+    marginBottom: 8,
+    fontWeight: '500',
+    fontFamily: 'Montserrat-Medium',
+  },
+  trailPickerContainer: {
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
+    height: 44,
+  },
+  trailPicker: {
+    height: 44,
+    color: '#333',
+    marginTop: Platform.OS === 'ios' ? 0 : -8,
+  },
+  trailProgressContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 40,
+    gap: 8,
+  },
+  trailFooter: {
+    backgroundColor: 'transparent',
+    paddingHorizontal: 32,
+    paddingBottom: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  getStartedButton: {
+    backgroundColor: '#69B437',
+    borderRadius: 4,
+    height: 43,
+    width: 239,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  getStartedButtonDisabled: {
+    backgroundColor: '#E0E0E0',
+  },
+  getStartedButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+    fontFamily: 'Montserrat-SemiBold',
+  },
+  getStartedButtonTextDisabled: {
     color: '#999',
   },
 });
