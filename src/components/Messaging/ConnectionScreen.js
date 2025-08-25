@@ -8,7 +8,7 @@ import {
   Alert,
   StyleSheet,
 } from 'react-native';
-import { BLE_CONFIG } from '../config/constants';
+import { BLE_CONFIG } from '../../config/constants';
 import DeviceItem from './DeviceItem';
 
 const ConnectionScreen = ({

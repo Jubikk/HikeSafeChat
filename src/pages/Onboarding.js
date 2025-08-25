@@ -10,14 +10,18 @@ import {
   Platform,
 } from 'react-native';
 
-const OnboardingScreen = () => {
+/**
+ * OnboardingScreen component
+ * @param {Object} props
+ * @param {Function} props.onNext - Callback to proceed to the next screen
+ */
+const OnboardingScreen = ({ onNext }) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
 
   const handleNext = () => {
     if (firstName.trim() && lastName.trim()) {
-      // Handle navigation to next screen
-      console.log('Next pressed with:', { firstName, lastName });
+      if (typeof onNext === 'function') onNext();
     }
   };
 

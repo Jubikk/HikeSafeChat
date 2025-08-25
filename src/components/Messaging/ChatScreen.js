@@ -8,7 +8,7 @@ import {
   Alert,
   StyleSheet,
 } from 'react-native';
-import { BLE_CONFIG, MESSAGE_TYPES } from '../config/constants';
+import { BLE_CONFIG, MESSAGE_TYPES } from '../../config/constants';
 import MessageItem from './MessageItem';
 import MeshStatusBar from './MeshStatusBar';
 
