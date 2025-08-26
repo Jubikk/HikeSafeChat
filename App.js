@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StatusBar,
   Linking,
@@ -14,12 +14,20 @@ import { useDebug } from './src/hooks/useDebug';
 import { useDeviceConnection } from './src/hooks/useDeviceConnection';
 import styles from './src/styles/AppStyles';
 import OnboardingFlow from './src/pages/Onboarding';
+import { initDB, insertUserData } from './src/database/database';
+import UserInfo from './src/pages/userInfo'; 
 
 export default function HikeSafeApp() {
   const [showOnboarding, setShowOnboarding] = useState(true);
+  const [showUserInfo, setShowUserInfo] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [inputText, setInputText] = useState('');
   const [availableDevices, setAvailableDevices] = useState([]);
+
+  // Initialize database once at startup
+  useEffect(() => {
+    initDB();
+  }, []);
   
   // Custom hooks
   const { debugInfo, addDebugInfo } = useDebug();
@@ -36,10 +44,34 @@ export default function HikeSafeApp() {
     disconnect 
   } = useDeviceConnection(bleManagerRef, addDebugInfo, addMessage);
 
+  // Handle onboarding completion and save to SQLite
+  const handleOnboardingComplete = async (userData) => {
+    try {
+      await insertUserData(userData);
+      console.log('User data saved ✅');
+      setShowOnboarding(false);
+      setShowUserInfo(true); // Show UserInfo screen after onboarding
+    } catch (error) {
+      console.error('Failed to save user data:', error);
+    }
+  };
+
+  // Handle UserInfo completion
+  const handleUserInfoComplete = () => {
+    setShowUserInfo(false); // This will proceed to the BLE flow
+  };
+
   // Show onboarding screen first
   if (showOnboarding) {
     return (
-      <OnboardingFlow onComplete={() => setShowOnboarding(false)} />
+      <OnboardingFlow onComplete={handleOnboardingComplete} />
+    );
+  }
+
+  // Show UserInfo screen after onboarding completion
+  if (showUserInfo) {
+    return (
+      <UserInfo onComplete={handleUserInfoComplete} />
     );
   }
 
