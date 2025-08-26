@@ -4,6 +4,8 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
+  Keyboard,
   StyleSheet,
   SafeAreaView,
   KeyboardAvoidingView,
@@ -15,11 +17,8 @@ import { Picker } from '@react-native-picker/picker';
 /**
  * OnboardingScreen component - First screen asking for name
  */
-const OnboardingScreen = ({ onNext }) => {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [nickName, setNickName] = useState('');
-
+const OnboardingScreen = ({ userData, setUserData, onNext }) => {
+  const { firstName, lastName, nickName } = userData;
 
   const handleNext = () => {
     if (firstName.trim() && lastName.trim()) {
@@ -41,51 +40,53 @@ const OnboardingScreen = ({ onNext }) => {
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <View style={styles.content}>
-          <Text style={styles.title}>What do we{'\n'}call you?</Text>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.content}>
+            <Text style={styles.title}>What do we{'\n'}call you?</Text>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>First Name</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="First Name"
-              placeholderTextColor="#C7C7C7"
-              value={firstName}
-              onChangeText={setFirstName}
-              returnKeyType="next"
-            />
-          </View>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>First Name</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="First Name"
+                placeholderTextColor="#C7C7C7"
+                value={firstName}
+                onChangeText={(text) => setUserData({...userData, firstName: text})}
+                returnKeyType="next"
+              />
+            </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Last Name</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Last Name"
-              placeholderTextColor="#C7C7C7"
-              value={lastName}
-              onChangeText={setLastName}
-              returnKeyType="next"
-            />
-          </View>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Last Name</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Last Name"
+                placeholderTextColor="#C7C7C7"
+                value={lastName}
+                onChangeText={(text) => setUserData({...userData, lastName: text})}
+                returnKeyType="next"
+              />
+            </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Nickname</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Nickname"
-              placeholderTextColor="#C7C7C7"
-              value={nickName}
-              onChangeText={setNickName}
-              returnKeyType="done"
-            />
-          </View>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Nickname</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Nickname"
+                placeholderTextColor="#C7C7C7"
+                value={nickName}
+                onChangeText={(text) => setUserData({...userData, nickName: text})}
+                returnKeyType="done"
+              />
+            </View>
 
-          <View style={styles.progressContainer}>
-            <View style={[styles.progressDot, styles.activeDot]} />
-            <View style={styles.progressDot} />
-            <View style={styles.progressDot} />
+            <View style={styles.progressContainer}>
+              <View style={[styles.progressDot, styles.activeDot]} />
+              <View style={styles.progressDot} />
+              <View style={styles.progressDot} />
+            </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
 
       <View style={styles.footer}>
@@ -106,11 +107,8 @@ const OnboardingScreen = ({ onNext }) => {
 /**
  * SafetyFirstScreen component - Second screen for safety information
  */
-const SafetyFirstScreen = ({ onNext }) => {
-  const [contactName, setContactName] = useState('');
-  const [contactPhone, setContactPhone] = useState('');
-  const [bloodType, setBloodType] = useState('');
-  const [medicalCondition, setMedicalCondition] = useState('');
+const SafetyFirstScreen = ({ userData, setUserData, onNext }) => {
+  const { contactName, contactPhone, bloodType, medicalCondition } = userData;
 
   const bloodTypes = [
     { label: 'Select Blood Type', value: '' },
@@ -144,74 +142,76 @@ const SafetyFirstScreen = ({ onNext }) => {
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <View style={styles.content}>
-          <Text style={styles.title}>Safety first!</Text>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.content}>
+            <Text style={styles.title}>Safety first!</Text>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Contact Name</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Name"
-              placeholderTextColor="#C7C7C7"
-              value={contactName}
-              onChangeText={setContactName}
-              returnKeyType="next"
-            />
-          </View>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Contact Name</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Name"
+                placeholderTextColor="#C7C7C7"
+                value={contactName}
+                onChangeText={(text) => setUserData({...userData, contactName: text})}
+                returnKeyType="next"
+              />
+            </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Contact Phone</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Phone"
-              placeholderTextColor="#C7C7C7"
-              value={contactPhone}
-              onChangeText={setContactPhone}
-              keyboardType="phone-pad"
-              returnKeyType="next"
-            />
-          </View>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Contact Phone</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Phone"
+                placeholderTextColor="#C7C7C7"
+                value={contactPhone}
+                onChangeText={(text) => setUserData({...userData, contactPhone: text})}
+                keyboardType="phone-pad"
+                returnKeyType="next"
+              />
+            </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Blood Type</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={bloodType}
-                onValueChange={setBloodType}
-                style={styles.picker}
-                mode="dropdown"
-              >
-                {bloodTypes.map((type, index) => (
-                  <Picker.Item 
-                    key={index} 
-                    label={type.label} 
-                    value={type.value}
-                    color={type.value === '' ? '#C7C7C7' : '#333'}
-                  />
-                ))}
-              </Picker>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Blood Type</Text>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={bloodType}
+                  onValueChange={(value) => setUserData({...userData, bloodType: value})}
+                  style={styles.picker}
+                  mode="dropdown"
+                >
+                  {bloodTypes.map((type, index) => (
+                    <Picker.Item 
+                      key={index} 
+                      label={type.label} 
+                      value={type.value}
+                      color={type.value === '' ? '#C7C7C7' : '#333'}
+                    />
+                  ))}
+                </Picker>
+              </View>
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Medical Condition</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Medical Condition"
+                placeholderTextColor="#C7C7C7"
+                value={medicalCondition}
+                onChangeText={(text) => setUserData({...userData, medicalCondition: text})}
+                returnKeyType="done"
+                multiline={true}
+              />
+            </View>
+
+            <View style={styles.SafetyFirstprogressContainer}>
+              <View style={styles.progressDot} />
+              <View style={[styles.progressDot, styles.activeDot]} />
+              <View style={styles.progressDot} />
             </View>
           </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Medical Condition</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Medical Condition"
-              placeholderTextColor="#C7C7C7"
-              value={medicalCondition}
-              onChangeText={setMedicalCondition}
-              returnKeyType="done"
-              multiline={true}
-            />
-          </View>
-
-          <View style={styles.SafetyFirstprogressContainer}>
-            <View style={styles.progressDot} />
-            <View style={[styles.progressDot, styles.activeDot]} />
-            <View style={styles.progressDot} />
-          </View>
-        </View>
+        </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
 
       <View style={styles.footer}>
@@ -232,8 +232,8 @@ const SafetyFirstScreen = ({ onNext }) => {
 /**
  * TrailReadyScreen component - Third screen for hiking experience
  */
-const TrailReadyScreen = ({ onComplete }) => {
-  const [experienceLevel, setExperienceLevel] = useState('');
+const TrailReadyScreen = ({ userData, setUserData, onComplete }) => {
+  const { experienceLevel } = userData;
 
   const experienceLevels = [
     { label: 'Beginner', value: 'beginner' },
@@ -267,7 +267,7 @@ const TrailReadyScreen = ({ onComplete }) => {
           <View style={styles.trailPickerContainer}>
             <Picker
               selectedValue={experienceLevel}
-              onValueChange={setExperienceLevel}
+              onValueChange={(value) => setUserData({...userData, experienceLevel: value})}
               style={styles.trailPicker}
               mode="dropdown"
               prompt="Select your experience level"
@@ -312,9 +312,23 @@ const TrailReadyScreen = ({ onComplete }) => {
   );
 };
 
-/*** Main OnboardingFlow component that handles navigation between screens*/
+/**
+ * Main OnboardingFlow component that handles navigation between screens
+ */
 const OnboardingFlow = ({ onComplete }) => {
   const [currentScreen, setCurrentScreen] = useState(0);
+
+  // All user data collected in one object
+  const [userData, setUserData] = useState({
+    firstName: '',
+    lastName: '',
+    nickName: '',
+    contactName: '',
+    contactPhone: '',
+    bloodType: '',
+    medicalCondition: '',
+    experienceLevel: '',
+  });
 
   const handleNextScreen = () => {
     setCurrentScreen(currentScreen + 1);
@@ -322,21 +336,37 @@ const OnboardingFlow = ({ onComplete }) => {
 
   const handleCompleteOnboarding = () => {
     // Handle onboarding completion here
-    console.log('Onboarding completed!');
+    console.log('Onboarding completed!', userData);
     if (typeof onComplete === 'function') {
-      onComplete();
+      onComplete(userData);
     }
   };
 
   switch (currentScreen) {
     case 0:
-      return <OnboardingScreen onNext={handleNextScreen} />;
+      return <OnboardingScreen 
+                userData={userData}
+                setUserData={setUserData}
+                onNext={handleNextScreen} 
+              />;
     case 1:
-      return <SafetyFirstScreen onNext={handleNextScreen} />;
+      return <SafetyFirstScreen 
+                userData={userData}
+                setUserData={setUserData}
+                onNext={handleNextScreen} 
+              />;
     case 2:
-      return <TrailReadyScreen onComplete={handleCompleteOnboarding} />;
+      return <TrailReadyScreen 
+                userData={userData}
+                setUserData={setUserData}
+                onComplete={handleCompleteOnboarding} 
+              />;
     default:
-      return <OnboardingScreen onNext={handleNextScreen} />;
+      return <OnboardingScreen 
+                userData={userData}
+                setUserData={setUserData}
+                onNext={handleNextScreen} 
+              />;
   }
 };
 
