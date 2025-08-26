@@ -4,14 +4,11 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  TouchableWithoutFeedback,
-  Keyboard,
   StyleSheet,
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   Image,
-  ScrollView,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 
@@ -21,6 +18,8 @@ import { Picker } from '@react-native-picker/picker';
 const OnboardingScreen = ({ onNext }) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [nickName, setNickName] = useState('');
+
 
   const handleNext = () => {
     if (firstName.trim() && lastName.trim()) {
@@ -42,41 +41,51 @@ const OnboardingScreen = ({ onNext }) => {
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View style={styles.content}>
-            <Text style={styles.title}>What do we{'\n'}call you?</Text>
+        <View style={styles.content}>
+          <Text style={styles.title}>What do we{'\n'}call you?</Text>
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>First Name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="First Name"
-                placeholderTextColor="#C7C7C7"
-                value={firstName}
-                onChangeText={setFirstName}
-                returnKeyType="next"
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Last Name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Last Name"
-                placeholderTextColor="#C7C7C7"
-                value={lastName}
-                onChangeText={setLastName}
-                returnKeyType="done"
-              />
-            </View>
-
-            <View style={styles.progressContainer}>
-              <View style={[styles.progressDot, styles.activeDot]} />
-              <View style={styles.progressDot} />
-              <View style={styles.progressDot} />
-            </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>First Name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="First Name"
+              placeholderTextColor="#C7C7C7"
+              value={firstName}
+              onChangeText={setFirstName}
+              returnKeyType="next"
+            />
           </View>
-        </TouchableWithoutFeedback>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Last Name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Last Name"
+              placeholderTextColor="#C7C7C7"
+              value={lastName}
+              onChangeText={setLastName}
+              returnKeyType="next"
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Nickname</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Nickname"
+              placeholderTextColor="#C7C7C7"
+              value={nickName}
+              onChangeText={setNickName}
+              returnKeyType="done"
+            />
+          </View>
+
+          <View style={styles.progressContainer}>
+            <View style={[styles.progressDot, styles.activeDot]} />
+            <View style={styles.progressDot} />
+            <View style={styles.progressDot} />
+          </View>
+        </View>
       </KeyboardAvoidingView>
 
       <View style={styles.footer}>
@@ -104,15 +113,15 @@ const SafetyFirstScreen = ({ onNext }) => {
   const [medicalCondition, setMedicalCondition] = useState('');
 
   const bloodTypes = [
-    { label: 'Type O ', value: 'O' },
-    { label: 'Type O+', value: 'O+' },
-    { label: 'Type O-', value: 'O-' },
-    { label: 'Type A+', value: 'A+' },
-    { label: 'Type A-', value: 'A-' },
-    { label: 'Type B+', value: 'B+' },
-    { label: 'Type B-', value: 'B-' },
-    { label: 'Type AB+', value: 'AB+' },
-    { label: 'Type AB-', value: 'AB-' },
+    { label: 'Select Blood Type', value: '' },
+    { label: 'A+', value: 'A+' },
+    { label: 'A-', value: 'A-' },
+    { label: 'B+', value: 'B+' },
+    { label: 'B-', value: 'B-' },
+    { label: 'AB+', value: 'AB+' },
+    { label: 'AB-', value: 'AB-' },
+    { label: 'O+', value: 'O+' },
+    { label: 'O-', value: 'O-' },
   ];
 
   const handleNext = () => {
@@ -135,77 +144,74 @@ const SafetyFirstScreen = ({ onNext }) => {
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View style={styles.content}>
-            <Text style={styles.title}>Safety first!</Text>
+        <View style={styles.content}>
+          <Text style={styles.title}>Safety first!</Text>
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Contact Name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Name"
-                placeholderTextColor="#C7C7C7"
-                value={contactName}
-                onChangeText={setContactName}
-                returnKeyType="next"
-              />
-            </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Contact Name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Name"
+              placeholderTextColor="#C7C7C7"
+              value={contactName}
+              onChangeText={setContactName}
+              returnKeyType="next"
+            />
+          </View>
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Contact Phone</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Phone"
-                placeholderTextColor="#C7C7C7"
-                value={contactPhone}
-                onChangeText={setContactPhone}
-                keyboardType="phone-pad"
-                returnKeyType="next"
-              />
-            </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Contact Phone</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Phone"
+              placeholderTextColor="#C7C7C7"
+              value={contactPhone}
+              onChangeText={setContactPhone}
+              keyboardType="phone-pad"
+              returnKeyType="next"
+            />
+          </View>
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Blood Type</Text>
-              <View >
-                <Picker
-                  selectedValue={bloodType}
-                  onValueChange={setBloodType}
-                  style={styles.pickerContainer}
-                  mode="dropdown"
-                  itemStyle={styles.picker}
-                >
-                  {bloodTypes.map((type, index) => (
-                    <Picker.Item 
-                      key={index} 
-                      label={type.label} 
-                      value={type.value}
-                      color={type.value === '' ? '#FFFFFF' : '#333'}
-                    />
-                  ))}
-                </Picker>
-              </View>
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Medical Condition</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Medical Condition"
-                placeholderTextColor="#C7C7C7"
-                value={medicalCondition}
-                onChangeText={setMedicalCondition}
-                returnKeyType="done"
-                multiline={true}
-              />
-            </View>
-
-            <View style={styles.progressContainer}>
-              <View style={styles.progressDot} />
-              <View style={[styles.progressDot, styles.activeDot]} />
-              <View style={styles.progressDot} />
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Blood Type</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={bloodType}
+                onValueChange={setBloodType}
+                style={styles.picker}
+                mode="dropdown"
+              >
+                {bloodTypes.map((type, index) => (
+                  <Picker.Item 
+                    key={index} 
+                    label={type.label} 
+                    value={type.value}
+                    color={type.value === '' ? '#C7C7C7' : '#333'}
+                  />
+                ))}
+              </Picker>
             </View>
           </View>
-        </TouchableWithoutFeedback>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Medical Condition</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Medical Condition"
+              placeholderTextColor="#C7C7C7"
+              value={medicalCondition}
+              onChangeText={setMedicalCondition}
+              returnKeyType="done"
+              multiline={true}
+            />
+          </View>
+
+          <View style={styles.SafetyFirstprogressContainer}>
+            <View style={styles.progressDot} />
+            <View style={[styles.progressDot, styles.activeDot]} />
+            <View style={styles.progressDot} />
+          </View>
+        </View>
       </KeyboardAvoidingView>
 
       <View style={styles.footer}>
@@ -258,19 +264,26 @@ const TrailReadyScreen = ({ onComplete }) => {
 
         <View style={styles.trailInputContainer}>
           <Text style={styles.trailLabel}>Hiking Experience level</Text>
-          <View style={styles.trailPickerContainer}> 
+          <View style={styles.trailPickerContainer}>
             <Picker
               selectedValue={experienceLevel}
               onValueChange={setExperienceLevel}
-              itemStyle={styles.trailPicker}
+              style={styles.trailPicker}
               mode="dropdown"
+              prompt="Select your experience level"
             >
+              <Picker.Item 
+                label="Select Experience Level"
+                value=""
+                color="#C7C7C7"
+                enabled={false}
+              />
               {experienceLevels.map((level, index) => (
                 <Picker.Item 
                   key={index} 
                   label={level.label} 
                   value={level.value}
-                  color={level.value === '' ? '#C7C7C7' : '#333'}
+                  color="#333"
                 />
               ))}
             </Picker>
@@ -299,9 +312,7 @@ const TrailReadyScreen = ({ onComplete }) => {
   );
 };
 
-/**
- * Main OnboardingFlow component that handles navigation between screens
- */
+/*** Main OnboardingFlow component that handles navigation between screens*/
 const OnboardingFlow = ({ onComplete }) => {
   const [currentScreen, setCurrentScreen] = useState(0);
 
@@ -360,13 +371,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#48C029',
     marginBottom: 50,
-    marginTop: 70,
+    marginTop: 65,
     lineHeight: 48,
     textAlign: 'center',
     fontFamily: 'Montserrat-Bold',
   },
   inputContainer: {
-    marginBottom: 24,
+    marginTop: 15,  
   },
   label: {
     fontSize: 16,
@@ -384,29 +395,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#FFFFFF',
     color: '#333',
-    minHeight: 44,
+    minHeight: 40,
   },
   pickerContainer: {
     borderWidth: 1,
     borderColor: '#E0E0E0',
     borderRadius: 8,
-    marginTop: 4,
     backgroundColor: '#FFFFFF',
     overflow: 'hidden',
     height: 44,
   },
   picker: {
-    width: '100%',
-    height: 44,
+    height: 60,
     color: '#333',
-    backgroundColor: '#FFFFFF',
-    overflow: 'hidden',
+    marginTop: Platform.OS === 'ios' ? 0 : -8,
   },
   progressContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 25,
+    marginTop: 100,
     gap: 8,
   },
   progressDot: {
@@ -447,6 +455,14 @@ const styles = StyleSheet.create({
   nextButtonTextDisabled: {
     color: '#999',
   },
+  SafetyFirstprogressContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center', 
+    alignItems: 'center',
+    marginTop: 60,
+    gap: 8,
+  },
+
   // Trail Ready Screen Styles
   trailContainer: {
     flex: 1,
@@ -466,9 +482,8 @@ const styles = StyleSheet.create({
   trailContent: {
     flex: 1,
     backgroundColor: 'transparent',
-    paddingHorizontal: 24,
-    paddingTop: 30,
-    paddingBottom: 10,
+    paddingHorizontal: 32,
+    paddingTop: 118,
     zIndex: 1,
     justifyContent: 'flex-start',
   },
@@ -476,49 +491,47 @@ const styles = StyleSheet.create({
     fontSize: 40,
     fontWeight: 'bold',
     color: '#48C029',
-    marginBottom: 30,
+    marginBottom: 70,
     lineHeight: 48,
     textAlign: 'center',
     fontFamily: 'Montserrat-Bold',
   },
   trailInputContainer: {
-    marginBottom: 20,
+    marginBottom: 50,
   },
   trailLabel: {
     fontSize: 16,
     color: '#255D00',
     marginBottom: 8,
     fontWeight: '500',
+    marginTop: 35,
     fontFamily: 'Montserrat-Medium',
   },
   trailPickerContainer: {
     borderWidth: 1,
     borderColor: '#E0E0E0',
     borderRadius: 8,
-    marginTop: 4,
     backgroundColor: '#FFFFFF',
     overflow: 'hidden',
-    maxHeight: 44,
+    marginTop: 8,
     height: 44,
   },
   trailPicker: {
-    width: '100%',
-    height: 44,
+    height: 60,
     color: '#333',
-    backgroundColor: '#FFFFFF',
+    marginTop: Platform.OS === 'ios' ? 0 : -9,
   },
   trailProgressContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 175,
     gap: 8,
   },
   trailFooter: {
     backgroundColor: 'transparent',
     paddingHorizontal: 32,
-    paddingTop: 20,
-    paddingBottom: 60,
+    paddingBottom: 100,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1,
