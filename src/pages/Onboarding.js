@@ -251,10 +251,10 @@ const TrailReadyScreen = ({ onComplete }) => {
   const isGetStartedDisabled = !experienceLevel;
 
   return (
-    <SafeAreaView style={styles.trailContainer}>
+    <SafeAreaView style={styles.container}>
       <Image
         source={require('../../assets/OnBoarding-background.png')}
-        style={styles.trailBgImage}
+        style={styles.bgImage}
         resizeMode="cover"
         pointerEvents="none"
       />
