@@ -22,7 +22,8 @@
     "react-native-image": "^0.1.1",
     "react-native-make": "^1.0.1",
     "react-native-splash-screen": "^3.3.0",
-    "react-native-webview": "^13.16.0"
+    "react-native-webview": "^13.16.0",
+    "expo-sqlite": "~15.2.14"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0"
