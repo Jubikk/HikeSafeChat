@@ -14,12 +14,15 @@
     "@react-native-picker/picker": "^2.11.1",
     "expo": "53.0.22",
     "expo-dev-client": "~5.2.4",
+    "expo-image": "^2.4.0",
     "react": "19.0.0",
     "react-native": "0.79.5",
     "react-native-ble-plx": "^3.5.0",
     "react-native-bootsplash": "^6.3.10",
+    "react-native-image": "^0.1.1",
     "react-native-make": "^1.0.1",
-    "react-native-splash-screen": "^3.3.0"
+    "react-native-splash-screen": "^3.3.0",
+    "react-native-webview": "^13.16.0"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0"

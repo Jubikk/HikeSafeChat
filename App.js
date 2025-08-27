@@ -16,9 +16,11 @@ import styles from './src/styles/AppStyles';
 import OnboardingFlow from './src/pages/Onboarding';
 import { initDB, insertUserData } from './src/database/database';
 import UserInfo from './src/pages/userInfo'; 
+import HikingLoginScreen from './src/pages/Login'; // Import your login screen
 
 export default function HikeSafeApp() {
   const [showOnboarding, setShowOnboarding] = useState(true);
+  const [showLogin, setShowLogin] = useState(false);
   const [showUserInfo, setShowUserInfo] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [inputText, setInputText] = useState('');
@@ -44,6 +46,18 @@ export default function HikeSafeApp() {
     disconnect 
   } = useDeviceConnection(bleManagerRef, addDebugInfo, addMessage);
 
+  // Handle onboarding completion
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+    setShowLogin(true); // Show login screen after onboarding
+  };
+
+  // Handle login completion
+  const handleLoginComplete = () => {
+    setShowLogin(false);
+    // Continue to main app flow
+  };
+
   // Handle onboarding completion and save to SQLite
   const handleOnboardingComplete = async (userData) => {
     try {
@@ -68,10 +82,10 @@ export default function HikeSafeApp() {
     );
   }
 
-  // Show UserInfo screen after onboarding completion
-  if (showUserInfo) {
+  // Show login screen after onboarding completion
+  if (showLogin) {
     return (
-      <UserInfo onComplete={handleUserInfoComplete} />
+      <HikingLoginScreen onLoginComplete={handleLoginComplete} />
     );
   }
 

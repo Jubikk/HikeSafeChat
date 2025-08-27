@@ -304,7 +304,7 @@ const TrailReadyScreen = ({ userData, setUserData, onComplete }) => {
           disabled={isGetStartedDisabled}
         >
           <Text style={[styles.getStartedButtonText, isGetStartedDisabled && styles.getStartedButtonTextDisabled]}>
-            Get Started
+            Accept and Continue
           </Text>
         </TouchableOpacity>
       </View>
