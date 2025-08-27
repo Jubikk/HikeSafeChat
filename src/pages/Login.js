@@ -24,12 +24,27 @@ const HikingLoginScreen = ({ onLoginComplete }) => {
     
     // Basic validation
     if (username.trim() && groupId.trim()) {
-      // Handle login logic here
+      // Prepare user data with required fields
+      const userData = {
+        username,
+        groupId,
+        rememberMe,
+        // Set default values for required fields
+        firstName: username, // Using username as default first name
+        lastName: '',
+        contactName: '',
+        contactPhone: '',
+        bloodType: '',
+        medicalCondition: '',
+        experienceLevel: '',
+        nickName: username
+      };
+      
       console.log('Login successful, proceeding to main app');
       
-      // Call the onLoginComplete callback to proceed to main app
+      // Call the onLoginComplete callback with user data
       if (typeof onLoginComplete === 'function') {
-        onLoginComplete();
+        onLoginComplete(userData);
       }
     } else {
       // You can add error handling here

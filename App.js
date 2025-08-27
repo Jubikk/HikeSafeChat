@@ -47,24 +47,24 @@ export default function HikeSafeApp() {
   } = useDeviceConnection(bleManagerRef, addDebugInfo, addMessage);
 
   // Handle onboarding completion
-  const handleOnboardingComplete = () => {
-    setShowOnboarding(false);
-    setShowLogin(true); // Show login screen after onboarding
-  };
-
-  // Handle login completion
-  const handleLoginComplete = () => {
-    setShowLogin(false);
-    // Continue to main app flow
-  };
-
-  // Handle onboarding completion and save to SQLite
   const handleOnboardingComplete = async (userData) => {
     try {
       await insertUserData(userData);
       console.log('User data saved ✅');
       setShowOnboarding(false);
-      setShowUserInfo(true); // Show UserInfo screen after onboarding
+      setShowLogin(true); // Show login screen after onboarding
+    } catch (error) {
+      console.error('Failed to save user data:', error);
+    }
+  };
+
+  // Handle login completion
+  const handleLoginComplete = async (userData) => {
+    try {
+      await insertUserData(userData);
+      console.log('User data saved ✅');
+      setShowLogin(false);
+      setShowUserInfo(true); // Show UserInfo screen after login
     } catch (error) {
       console.error('Failed to save user data:', error);
     }
@@ -74,6 +74,7 @@ export default function HikeSafeApp() {
   const handleUserInfoComplete = () => {
     setShowUserInfo(false); // This will proceed to the BLE flow
   };
+
 
   // Show onboarding screen first
   if (showOnboarding) {
@@ -89,6 +90,12 @@ export default function HikeSafeApp() {
     );
   }
 
+  if (showUserInfo) {
+    return (
+      <UserInfo onComplete={handleUserInfoComplete} />
+    );
+  }
+  
   // Show initialization screen while BLE is setting up
   if (!manager || !permissionsGranted) {
     return (

@@ -6,8 +6,12 @@ const db = SQLite.openDatabaseSync('hikesafe.db');
 // Initialize DB
 export const initDB = () => {
   try {
+    // First drop the table if it exists
+    db.execSync('DROP TABLE IF EXISTS users;');
+    
+    // Then create the table with the correct schema
     db.execSync(`
-      CREATE TABLE IF NOT EXISTS users (
+      CREATE TABLE users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         firstName TEXT,
         lastName TEXT,
@@ -15,14 +19,18 @@ export const initDB = () => {
         contactPhone TEXT,
         bloodType TEXT,
         medicalCondition TEXT,
-        experienceLevel TEXT
+        experienceLevel TEXT,
+        groupId TEXT,
+        rememberMe BOOLEAN,
+        username TEXT,
+        nickName TEXT
       );
     `);
     
     // Enable foreign keys
     db.execSync('PRAGMA foreign_keys = ON;');
     
-    console.log('Database initialized successfully');
+    console.log('Database recreated successfully with updated schema');
   } catch (error) {
     console.error('Error initializing database:', error);
   }
@@ -38,14 +46,18 @@ export const insertUserData = async (userData) => {
     bloodType,
     medicalCondition,
     experienceLevel,
+    groupId,
+    rememberMe,
+    username,
+    nickName,
   } = userData;
 
   try {
     const result = db.runSync(
       `INSERT INTO users 
-        (firstName, lastName, contactName, contactPhone, bloodType, medicalCondition, experienceLevel)
-        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [firstName, lastName, contactName, contactPhone, bloodType, medicalCondition, experienceLevel]
+        (firstName, lastName, contactName, contactPhone, bloodType, medicalCondition, experienceLevel, groupId, rememberMe, username, nickName)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [firstName, lastName, contactName, contactPhone, bloodType, medicalCondition, experienceLevel, groupId, rememberMe, username, nickName]
     );
     
     console.log('User data inserted successfully:', result.lastInsertRowId);
