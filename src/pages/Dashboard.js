@@ -1,32 +1,43 @@
+import React, { useState, useEffect } from 'react';
+import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
-import {
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-} from 'react-native';
 import BottomNavBar from '../components/navbar/bottomNavBar';
 
-const Dashboard = () => {
+const Dashboard = ({ onNavigate, currentScreen }) => {
   const [activeTab, setActiveTab] = useState('home');
 
+  useEffect(() => {
+    if (currentScreen === 'dashboard') setActiveTab('home');
+    else if (currentScreen === 'userInfo') setActiveTab('profile');
+  }, [currentScreen]);
+
+  // Tab press handler - fixed the navigation logic
   const handleTabPress = (tabId) => {
+    console.log('Tab pressed:', tabId); // Debug log
     setActiveTab(tabId);
-    // Handle navigation logic here
-    console.log('Tab pressed:', tabId);
+    
+    // Map tabId to screen name and navigate
+    const screenMapping = {
+      'home': 'dashboard',
+      'profile': 'userInfo'
+    };
+    
+    const targetScreen = screenMapping[tabId];
+    if (onNavigate && targetScreen) {
+      console.log('Navigating to screen:', targetScreen); // Debug log
+      onNavigate(targetScreen);
+    }
   };
 
-  const ServiceButton = ({ iconName, label, badgeCount, backgroundColor }) => (
+  // Service button component
+  const ServiceButton = ({ iconName, label, badgeCount = 0, backgroundColor }) => (
     <View style={styles.serviceContainer}>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.serviceButton, { backgroundColor }]}
         activeOpacity={0.7}
         onPress={() => console.log(`${label} pressed`)}
       >
-        <Ionicons name={iconName} size={32} color="#333" />
+        <Ionicons name={iconName} size={28} color="#333" />
         {badgeCount > 0 && (
           <View style={styles.badge}>
             <Text style={styles.badgeText}>{badgeCount}</Text>
@@ -37,36 +48,34 @@ const Dashboard = () => {
     </View>
   );
 
+  // Activity card component
   const ActivityCard = ({ index }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={styles.activityCard}
-      onPress={() => console.log(`Activity ${index + 1} pressed`)}
       activeOpacity={0.7}
+      onPress={() => console.log(`Activity ${index + 1} pressed`)}
     >
-      <View style={styles.activityPlaceholder}>
-        <Text style={styles.activityPlaceholderText}>Activity {index + 1}</Text>
-      </View>
+      <Text style={styles.activityText}>Activity {index + 1}</Text>
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Main Content */}
+    <View style={styles.wrapper}>
+      <SafeAreaView style={styles.statusBarContainer} />
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Greeting Card */}
+        {/* Greeting */}
         <View style={styles.greetingCard}>
           <Text style={styles.greeting}>Hello!</Text>
           <Text style={styles.userName}>John Doe</Text>
         </View>
 
-        {/* Lobby ID Card */}
+        {/* Lobby Info */}
         <View style={styles.lobbyCard}>
           <View style={styles.lobbyHeader}>
             <Text style={styles.lobbyIdLabel}>LOBBY ID</Text>
-            <Text style={styles.batteryNote}>NOTE: *battery health of lora*</Text>
+            <Text style={styles.batteryNote}>*Battery health of LoRa</Text>
           </View>
           <Text style={styles.lobbyId}>ABCDEF123</Text>
-          
           <View style={styles.lobbyStats}>
             <View style={styles.statItem}>
               <Text style={styles.statLabel}>MEMBERS</Text>
@@ -90,183 +99,74 @@ const Dashboard = () => {
         {/* Services Section */}
         <Text style={styles.sectionTitle}>Services</Text>
         <View style={styles.servicesContainer}>
-          <ServiceButton
-            iconName="people-outline"
-            label="Lobby"
-            badgeCount={0}
-            backgroundColor="#F0F0F0"
-          />
-          <ServiceButton
-            iconName="chatbubble-outline"
-            label="Message"
-            badgeCount={2}
-            backgroundColor="#C8E6C9"
-          />
-          <ServiceButton
-            iconName="warning-outline"
-            label="SOS Alert"
-            badgeCount={0}
-            backgroundColor="#BBDEFB"
-          />
-          <ServiceButton
-            iconName="navigate-outline"
-            label="Compass"
-            badgeCount={1}
-            backgroundColor="#FFE0B2"
-          />
+          <ServiceButton iconName="people-outline" label="Lobby" badgeCount={0} backgroundColor="#F0F0F0" />
+          <ServiceButton iconName="chatbubble-outline" label="Message" badgeCount={2} backgroundColor="#C8E6C9" />
+          <ServiceButton iconName="warning-outline" label="SOS Alert" badgeCount={0} backgroundColor="#FFCDD2" />
+          <ServiceButton iconName="navigate-outline" label="Compass" badgeCount={1} backgroundColor="#FFE0B2" />
         </View>
 
-        {/* Recent Activities Section */}
+        {/* Recent Activities */}
         <Text style={styles.sectionTitle}>Recent Activities</Text>
-        <ActivityCard index={0} />
-        <ActivityCard index={1} />
-        <ActivityCard index={2} />
-        
-        {/* Bottom spacing for scroll */}
-        <View style={styles.bottomSpacing} />
+        {[0, 1, 2].map((i) => (
+          <ActivityCard key={i} index={i} />
+        ))}
+
+        <View style={{ height: 24 }} />
       </ScrollView>
 
-      {/* Bottom Navigation */}
-      <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} />
-    </SafeAreaView>
+      {/* Bottom Navigation - Fixed the props */}
+      <BottomNavBar
+        activeTab={activeTab}
+        onTabPress={handleTabPress}
+        onNavigate={onNavigate}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#4A4A4A',
-        marginTop: 40,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    paddingTop: 20,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  content: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-    paddingHorizontal: 16,
-    paddingTop: 20,
-  },
+  wrapper: { flex: 1, backgroundColor: '#F5F5F5' },
+  statusBarContainer: { backgroundColor: '#000', paddingTop: 40 },
+  content: { flex: 1, paddingHorizontal: 16, paddingTop: 20 },
   greetingCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 20,
     marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
   },
-  greeting: {
-    fontSize: 18,
-    color: '#666',
-    marginBottom: 4,
-  },
-  userName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-  },
+  greeting: { fontSize: 18, color: '#666', marginBottom: 4 },
+  userName: { fontSize: 22, fontWeight: 'bold', color: '#333' },
   lobbyCard: {
     backgroundColor: '#7CB342',
     borderRadius: 16,
     padding: 20,
     marginBottom: 24,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
   },
-  lobbyHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  lobbyIdLabel: {
-    color: '#2E7D32',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  batteryNote: {
-    color: '#2E7D32',
-    fontSize: 10,
-    fontStyle: 'italic',
-  },
-  lobbyId: {
-    color: '#FFFFFF',
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    letterSpacing: 2,
-  },
-  lobbyStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statLabel: {
-    color: '#2E7D32',
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  statValue: {
-    color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  signalBars: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 2,
-  },
-  signalBar: {
-    width: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    borderRadius: 2,
-    height: 8,
-  },
-  signalActive: {
-    backgroundColor: '#FFFFFF',
-    height: 16,
-  },
-  signalMedium: {
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
-    height: 12,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 16,
-  },
-  servicesContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 32,
-  },
-  serviceContainer: {
-    alignItems: 'center',
-    flex: 1,
-  },
+  lobbyHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+  lobbyIdLabel: { color: '#2E7D32', fontSize: 12, fontWeight: 'bold' },
+  batteryNote: { color: '#2E7D32', fontSize: 10, fontStyle: 'italic' },
+  lobbyId: { color: '#fff', fontSize: 28, fontWeight: 'bold', marginBottom: 16, letterSpacing: 2 },
+  lobbyStats: { flexDirection: 'row', justifyContent: 'space-between' },
+  statItem: { alignItems: 'center' },
+  statLabel: { color: '#2E7D32', fontSize: 12, fontWeight: 'bold', marginBottom: 4 },
+  statValue: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
+  signalBars: { flexDirection: 'row', alignItems: 'flex-end', gap: 2 },
+  signalBar: { width: 4, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 2, height: 8 },
+  signalActive: { backgroundColor: '#fff', height: 16 },
+  signalMedium: { backgroundColor: 'rgba(255,255,255,0.7)', height: 12 },
+  sectionTitle: { fontSize: 20, fontWeight: 'bold', color: '#333', marginBottom: 16 },
+  servicesContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 32 },
+  serviceContainer: { alignItems: 'center', flex: 1 },
   serviceButton: {
     width: 60,
     height: 60,
@@ -274,12 +174,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
-    position: 'relative',
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
@@ -294,26 +190,9 @@ const styles = StyleSheet.create({
     height: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
-  badgeText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  serviceLabel: {
-    fontSize: 12,
-    color: '#333',
-    textAlign: 'center',
-    fontWeight: '500',
-  },
+  badgeText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
+  serviceLabel: { fontSize: 12, color: '#333', textAlign: 'center', fontWeight: '500' },
   activityCard: {
     backgroundColor: '#E0E0E0',
     borderRadius: 12,
@@ -321,27 +200,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2.84,
-    elevation: 3,
   },
-  activityPlaceholder: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  activityPlaceholderText: {
-    color: '#999',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  bottomSpacing: {
-    height: 20,
-  },
+  activityText: { fontSize: 16, fontWeight: '500', color: '#555' },
 });
 
 export default Dashboard;

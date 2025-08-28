@@ -1,21 +1,19 @@
+import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
-const BottomNavBar = ({ activeTab, onTabPress }) => {
+const BottomNavBar = ({ activeTab, onTabPress, onNavigate }) => {
   const tabs = [
-    { id: 'home', icon: 'home-outline', activeIcon: 'home', route: '/dashboard' },
-    { id: 'web', icon: 'globe-outline', activeIcon: 'globe', route: '/web' },
-    { id: 'upload', icon: 'cloud-upload-outline', activeIcon: 'cloud-upload', route: '/upload' },
-    { id: 'location', icon: 'location-outline', activeIcon: 'location', route: '/map_screen' },
-    { id: 'profile', icon: 'person-outline', activeIcon: 'person', route: '/userInfo' }
+    { id: 'home', icon: 'home-outline', activeIcon: 'home', screen: 'dashboard' },
+    { id: 'channel', icon: 'globe-outline', activeIcon: 'globe', screen: 'channel' },
+    { id: 'history', icon: 'cloud-upload-outline', activeIcon: 'cloud-upload', screen: 'history' },
+    { id: 'map', icon: 'location-outline', activeIcon: 'location', screen: 'map' },
+    { id: 'profile', icon: 'person-outline', activeIcon: 'person', screen: 'userInfo' },
   ];
 
   const handleTabPress = (tab) => {
-    if (tab.route) {
-      router.push(tab.route); // navigate to the route
-    }
-    onTabPress(tab.id); // update active tab
+    if (onTabPress) onTabPress(tab.id);
+    if (onNavigate) onNavigate(tab.screen);
   };
 
   return (
@@ -49,12 +47,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
   },
-  tabButton: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-  },
+  tabButton: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 8 },
 });
 
 export default BottomNavBar;

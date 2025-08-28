@@ -1,10 +1,15 @@
-// src/navigation/AppNavigator.js - Navigation Logic
+// src/navigation/AppNavigator.js
 import React from 'react';
 import { SafeAreaView, Linking } from 'react-native';
 import { useAppContext } from '../providers/AppProvider';
+
 import OnboardingFlow from '../pages/Onboarding';
 import HikingLoginScreen from '../pages/Login';
+import Dashboard from '../pages/Dashboard';
 import UserInfo from '../pages/userInfo';
+import Channel from '../pages/Channel';
+import History from '../pages/History';
+import Map from '../pages/Map';
 import InitializationScreen from '../components/Messaging/InitializationScreen';
 import ConnectionScreen from '../components/Messaging/ConnectionScreen';
 import ChatScreen from '../components/Messaging/ChatScreen';
@@ -12,21 +17,21 @@ import styles from '../styles/AppStyles';
 
 export default function AppNavigator() {
   const {
-    // App Flow
     showOnboarding,
     showLogin,
     showUserInfo,
+    showDashboard,
+    showChannel,
+    showHistory,
+    showMap,
     handleOnboardingComplete,
     handleLoginComplete,
-    handleUserInfoComplete,
-    
-    // BLE
+    navigateToScreen,
+    resetNavigationStates,
     manager,
     permissionsGranted,
     bleState,
     isConnected,
-    
-    // Other states and functions
     isScanning,
     setIsScanning,
     availableDevices,
@@ -45,26 +50,74 @@ export default function AppNavigator() {
     bleManagerRef,
   } = useAppContext();
 
-  // Show onboarding screen first
-  if (showOnboarding) {
-    return <OnboardingFlow onComplete={handleOnboardingComplete} />;
+  const handleNavigate = (screen) => {
+    navigateToScreen(screen);
+  };
+
+  // Add this function to handle navigation to BLE connection
+  const handleNavigateToBLE = () => {
+    console.log('Navigating to BLE connection...');
+    resetNavigationStates(); // This will set all navigation states to false, allowing BLE screens to show
+  };
+
+  // Helper function to get current screen for bottom nav
+  const getCurrentScreen = () => {
+    if (showDashboard) return 'home';
+    if (showUserInfo) return 'profile';
+    if (showChannel) return 'channel';
+    if (showHistory) return 'history';
+    if (showMap) return 'map';
+    return 'home';
+  };
+
+  if (showOnboarding) return <OnboardingFlow onComplete={handleOnboardingComplete} />;
+  if (showLogin) return <HikingLoginScreen onLoginComplete={handleLoginComplete} />;
+
+  // Main app screens with bottom navigation
+  if (showDashboard || showUserInfo || showChannel || showHistory || showMap) {
+    return (
+      <SafeAreaView style={styles.container}>
+        {showDashboard && (
+          <Dashboard 
+            currentScreen={getCurrentScreen()} 
+            onNavigate={handleNavigate} 
+          />
+        )}
+        {showUserInfo && (
+          <UserInfo 
+            currentScreen={getCurrentScreen()} 
+            onComplete={() => navigateToScreen('dashboard')} 
+            onNavigate={handleNavigate}
+            onNavigateToBLE={handleNavigateToBLE}
+          />
+        )}
+        {showChannel && (
+          <Channel 
+            currentScreen={getCurrentScreen()} 
+            onNavigate={handleNavigate} 
+          />
+        )}
+        {showHistory && (
+          <History 
+            currentScreen={getCurrentScreen()} 
+            onNavigate={handleNavigate} 
+          />
+        )}
+        {showMap && (
+          <Map 
+            currentScreen={getCurrentScreen()} 
+            onNavigate={handleNavigate} 
+          />
+        )}
+      </SafeAreaView>
+    );
   }
 
-  // Show login screen after onboarding completion
-  if (showLogin) {
-    return <HikingLoginScreen onLoginComplete={handleLoginComplete} />;
-  }
-
-  // Show user info screen
-  if (showUserInfo) {
-    return <UserInfo onComplete={handleUserInfoComplete} />;
-  }
-  
-  // Show initialization screen while BLE is setting up
+  // BLE initialization screen
   if (!manager || !permissionsGranted) {
     return (
       <SafeAreaView style={styles.container}>
-        <InitializationScreen 
+        <InitializationScreen
           bleState={bleState}
           debugInfo={debugInfo}
           onOpenSettings={() => Linking.openSettings()}
@@ -73,7 +126,7 @@ export default function AppNavigator() {
     );
   }
 
-  // Show connection screen when not connected
+  // BLE connection screen
   if (!isConnected) {
     return (
       <SafeAreaView style={styles.container}>
@@ -94,7 +147,7 @@ export default function AppNavigator() {
     );
   }
 
-  // Show chat screen when connected
+  // BLE chat screen
   return (
     <SafeAreaView style={styles.container}>
       <ChatScreen

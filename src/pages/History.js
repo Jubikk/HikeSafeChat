@@ -2,11 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import BottomNavBar from '../components/navbar/bottomNavBar';
 
-const Map = ({ currentScreen, onNavigate }) => {
+const History = ({ currentScreen, onNavigate }) => {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.text}>This is map</Text>
+        <Text style={styles.text}>This is history</Text>
       </View>
       <BottomNavBar
         activeTab={currentScreen}
@@ -33,4 +33,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Map;
+export default History;
