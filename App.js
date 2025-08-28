@@ -16,7 +16,8 @@ import styles from './src/styles/AppStyles';
 import OnboardingFlow from './src/pages/Onboarding';
 import { initDB, insertUserData } from './src/database/database';
 import UserInfo from './src/pages/userInfo'; 
-import HikingLoginScreen from './src/pages/Login'; // Import your login screen
+import HikingLoginScreen from './src/pages/Login'; 
+import Dashboard from './src/pages/Dashboard'; 
 
 export default function HikeSafeApp() {
   const [showOnboarding, setShowOnboarding] = useState(true);
@@ -25,6 +26,7 @@ export default function HikeSafeApp() {
   const [isScanning, setIsScanning] = useState(false);
   const [inputText, setInputText] = useState('');
   const [availableDevices, setAvailableDevices] = useState([]);
+  const [showDashboard, setShowDashboard] = useState(false);
 
   // Initialize database once at startup
   useEffect(() => {
@@ -52,7 +54,7 @@ export default function HikeSafeApp() {
       await insertUserData(userData);
       console.log('User data saved ✅');
       setShowOnboarding(false);
-      setShowLogin(true); // Show login screen after onboarding
+      setShowLogin(true); 
     } catch (error) {
       console.error('Failed to save user data:', error);
     }
@@ -64,17 +66,20 @@ export default function HikeSafeApp() {
       await insertUserData(userData);
       console.log('User data saved ✅');
       setShowLogin(false);
-      setShowUserInfo(true); // Show UserInfo screen after login
+      setShowDashboard(true); 
     } catch (error) {
       console.error('Failed to save user data:', error);
     }
   };
 
+  if (showDashboard) {
+    return <Dashboard />;
+  }
+
   // Handle UserInfo completion
   const handleUserInfoComplete = () => {
-    setShowUserInfo(false); // This will proceed to the BLE flow
+    setShowUserInfo(false); 
   };
-
 
   // Show onboarding screen first
   if (showOnboarding) {
