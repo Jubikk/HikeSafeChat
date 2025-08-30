@@ -10,9 +10,9 @@ import UserInfo from '../pages/userInfo';
 import Channel from '../pages/Channel';
 import History from '../pages/History';
 import Map from '../pages/Map';
-import InitializationScreen from '../components/Messaging/InitializationScreen';
-import ConnectionScreen from '../components/Messaging/ConnectionScreen';
-import ChatScreen from '../components/Messaging/ChatScreen';
+import InitializationScreen from '../pages/Bluetooth/InitializationScreen';
+import ConnectionScreen from '../pages/Bluetooth/ConnectionScreen';
+import ChatScreen from '../pages/Messaging/ChatScreen';
 import styles from '../styles/AppStyles';
 
 export default function AppNavigator() {

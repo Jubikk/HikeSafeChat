@@ -5,6 +5,16 @@ export const BLE_CONFIG = {
   MESH_CHAR_UUID: "87654321-4321-4321-4321-cba987654321",
   SCAN_TIMEOUT: 15000,
   MAX_MESSAGE_LENGTH: 200,
+  COLORS: {
+    primary: '#3498db',
+    secondary: '#2ecc71',
+    background: '#2c3e50',
+    text: '#ecf0f1',
+    error: '#e74c3c',
+    success: '#2ecc71',
+    warning: '#f39c12',
+    disabled: '#95a5a6',
+  }
 };
 
 // Storage Keys
