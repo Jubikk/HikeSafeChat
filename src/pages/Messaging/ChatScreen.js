@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { BLE_CONFIG, MESSAGE_TYPES } from '../../config/constants';
 import MessageItem from './MessageItem';
 import MeshStatusBar from './MeshStatusBar';
@@ -24,6 +25,7 @@ const ChatScreen = ({
   onDisconnect,
   addMessage,
   addDebugInfo,
+  navigation, // Add navigation prop for back button
 }) => {
   const flatListRef = useRef(null);
 
@@ -128,6 +130,29 @@ const ChatScreen = ({
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    backgroundColor: '#fff',
+  },
+  backButton: {
+    padding: 5,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  headerRight: {
+    width: 30, // Same as back button for balance
+  },
+  contentContainer: {
     flex: 1,
     backgroundColor: '#f5f5f5',
   },

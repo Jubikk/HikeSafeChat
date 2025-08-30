@@ -24,6 +24,7 @@ export default function AppNavigator() {
     showChannel,
     showHistory,
     showMap,
+    showMessaging,
     handleOnboardingComplete,
     handleLoginComplete,
     navigateToScreen,
@@ -62,19 +63,22 @@ export default function AppNavigator() {
 
   // Helper function to get current screen for bottom nav
   const getCurrentScreen = () => {
-    if (showDashboard) return 'home';
-    if (showUserInfo) return 'profile';
+    if (showOnboarding) return 'onboarding';
+    if (showLogin) return 'login';
+    if (showDashboard) return 'dashboard';
+    if (showUserInfo) return 'userInfo';
     if (showChannel) return 'channel';
     if (showHistory) return 'history';
     if (showMap) return 'map';
-    return 'home';
+    if (showMessaging) return 'messaging';
+    return 'unknown';
   };
 
   if (showOnboarding) return <OnboardingFlow onComplete={handleOnboardingComplete} />;
   if (showLogin) return <HikingLoginScreen onLoginComplete={handleLoginComplete} />;
 
   // Main app screens with bottom navigation
-  if (showDashboard || showUserInfo || showChannel || showHistory || showMap) {
+  if (showDashboard || showUserInfo || showChannel || showHistory || showMap || showMessaging) {
     return (
       <SafeAreaView style={styles.container}>
         {showDashboard && (
@@ -107,6 +111,22 @@ export default function AppNavigator() {
           <Map 
             currentScreen={getCurrentScreen()} 
             onNavigate={handleNavigate} 
+          />
+        )}
+        {showMessaging && (
+          <ChatScreen
+            device={device}
+            isConnected={isConnected}
+            messages={messages}
+            inputText={inputText}
+            setInputText={setInputText}
+            meshStatus={meshStatus}
+            onDisconnect={disconnect}
+            addMessage={addMessage}
+            addDebugInfo={addDebugInfo}
+            navigation={{ 
+              goBack: () => navigateToScreen('dashboard') 
+            }}
           />
         )}
       </SafeAreaView>

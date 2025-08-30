@@ -9,6 +9,7 @@ export const useAppFlow = () => {
   const [showChannel, setShowChannel] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showMap, setShowMap] = useState(false);
+  const [showMessaging, setShowMessaging] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [inputText, setInputText] = useState('');
   const [availableDevices, setAvailableDevices] = useState([]);
@@ -54,6 +55,7 @@ export const useAppFlow = () => {
     setShowChannel(false);
     setShowHistory(false);
     setShowMap(false);
+    setShowMessaging(false);
   };
 
   // Navigation functions for each screen
@@ -82,26 +84,44 @@ export const useAppFlow = () => {
     setShowMap(true);
   };
 
+  const navigateToMessaging = () => {
+    resetAllScreenStates();
+    setShowMessaging(true);
+  };
+
   // Generic navigation handler
-  const navigateToScreen = (screenName) => {
-    switch (screenName) {
+  const navigateToScreen = (screen) => {
+    // Reset all screen states first
+    setShowDashboard(false);
+    setShowUserInfo(false);
+    setShowChannel(false);
+    setShowHistory(false);
+    setShowMap(false);
+    setShowMessaging(false);
+
+    // Set the requested screen
+    switch (screen) {
       case 'dashboard':
-        navigateToDashboard();
+        setShowDashboard(true);
         break;
       case 'userInfo':
-        navigateToUserInfo();
+        setShowUserInfo(true);
         break;
       case 'channel':
-        navigateToChannel();
+        setShowChannel(true);
         break;
       case 'history':
-        navigateToHistory();
+        setShowHistory(true);
         break;
       case 'map':
-        navigateToMap();
+        setShowMap(true);
+        break;
+      case 'messaging':
+        setShowMessaging(true);
         break;
       default:
-        console.warn(`Unknown screen: ${screenName}`);
+        console.warn(`Unknown screen: ${screen}`);
+        setShowDashboard(true);
     }
   };
 
@@ -114,6 +134,7 @@ export const useAppFlow = () => {
     setShowChannel(false);
     setShowHistory(false);
     setShowMap(false);
+    setShowMessaging(false);
   };
 
   return {

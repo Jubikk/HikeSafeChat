@@ -30,12 +30,12 @@ const Dashboard = ({ onNavigate, currentScreen }) => {
   };
 
   // Service button component
-  const ServiceButton = ({ iconName, label, badgeCount = 0, backgroundColor }) => (
+  const ServiceButton = ({ iconName, label, badgeCount = 0, backgroundColor, onPress }) => (
     <View style={styles.serviceContainer}>
       <TouchableOpacity
         style={[styles.serviceButton, { backgroundColor }]}
         activeOpacity={0.7}
-        onPress={() => console.log(`${label} pressed`)}
+        onPress={onPress}
       >
         <Ionicons name={iconName} size={28} color="#333" />
         {badgeCount > 0 && (
@@ -99,10 +99,34 @@ const Dashboard = ({ onNavigate, currentScreen }) => {
         {/* Services Section */}
         <Text style={styles.sectionTitle}>Services</Text>
         <View style={styles.servicesContainer}>
-          <ServiceButton iconName="people-outline" label="Lobby" badgeCount={0} backgroundColor="#F0F0F0" />
-          <ServiceButton iconName="chatbubble-outline" label="Message" badgeCount={2} backgroundColor="#C8E6C9" />
-          <ServiceButton iconName="warning-outline" label="SOS Alert" badgeCount={0} backgroundColor="#FFCDD2" />
-          <ServiceButton iconName="navigate-outline" label="Compass" badgeCount={1} backgroundColor="#FFE0B2" />
+          <ServiceButton 
+            iconName="people-outline" 
+            label="Lobby" 
+            badgeCount={0} 
+            backgroundColor="#F0F0F0"
+            onPress={() => console.log('Lobby pressed')}
+          />
+          <ServiceButton 
+            iconName="chatbubble-outline" 
+            label="Message" 
+            badgeCount={2} 
+            backgroundColor="#C8E6C9"
+            onPress={() => onNavigate && onNavigate('messaging')}
+          />
+          <ServiceButton 
+            iconName="warning-outline" 
+            label="SOS Alert" 
+            badgeCount={0} 
+            backgroundColor="#FFCDD2"
+            onPress={() => console.log('SOS Alert pressed')}
+          />
+          <ServiceButton 
+            iconName="navigate-outline" 
+            label="Compass" 
+            badgeCount={1} 
+            backgroundColor="#FFE0B2"
+            onPress={() => console.log('Compass pressed')}
+          />
         </View>
 
         {/* Recent Activities */}
